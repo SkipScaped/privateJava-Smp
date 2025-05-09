@@ -8,4 +8,8 @@
 - Database Include **Upstash for Redis, Blob and Neon**
 - Next.js API AUTH and discord login Function.
 - Smooth & Responsive
-  
+
+## Creator
+
+- [@SkipScape](https://www.github.com/SkipScaped)
+
