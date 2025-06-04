@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
-import Image from "next/image"
+import SafeImage from "@/components/safe-image"
 import type { Player } from "@/lib/data"
 
 interface PlayerCardProps {
@@ -20,27 +20,16 @@ export default function PlayerCard({ player }: PlayerCardProps) {
     }
   }
 
-  // Helper function to get profile picture with guaranteed fallback
-  const getProfilePicture = (player: Player) => {
-    if (player.profilePicture && player.profilePicture.trim() !== "") {
-      return player.profilePicture
-    }
-    return `/placeholder.svg?height=100&width=100&text=${player.username.substring(0, 2).toUpperCase()}`
-  }
-
   return (
     <Card className="bg-gray-800 border-gray-700 hover:border-gray-500 transition-colors">
       <CardContent className="p-6 flex flex-col items-center">
         <div className="relative w-20 h-20 rounded-full overflow-hidden mb-4">
-          <Image
-            src={getProfilePicture(player) || "/placeholder.svg"}
+          <SafeImage
+            src={player.profilePicture}
             alt={player.username}
             fill
             className="object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement
-              target.src = `/placeholder.svg?height=100&width=100&text=${player.username.substring(0, 2).toUpperCase()}`
-            }}
+            fallbackText={player.username.substring(0, 2).toUpperCase()}
           />
         </div>
 

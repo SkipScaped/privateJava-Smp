@@ -68,15 +68,6 @@
   }
 }
 
-/* PWA specific styles */
-@media (display-mode: standalone) {
-  body {
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-  }
-}
-
 /* Prevent zoom on iOS */
 input[type="text"],
 input[type="email"],
@@ -85,18 +76,20 @@ textarea {
   font-size: 16px;
 }
 
-/* Install prompt animation */
-@keyframes slideInUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
+@keyframes text-gradient {
+  0%,
+  100% {
+    background-position: 0% 50%;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+  50% {
+    background-position: 100% 50%;
   }
 }
 
-.install-prompt {
-  animation: slideInUp 0.3s ease-out;
+.animate-text-gradient {
+  animation: text-gradient 3s ease infinite;
+}
+
+.bg-300\% {
+  background-size: 300% 300%;
 }

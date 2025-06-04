@@ -3,10 +3,10 @@
 import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Menu, X, User, LogOut, Home, Package, Users, Book } from "lucide-react"
+import { ShoppingCart, Menu, X, User, LogOut, Home, Package, Users, Book, Camera } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useAuth } from "@/context/auth-context"
-import Image from "next/image"
+import SafeImage from "@/components/safe-image"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,16 +29,8 @@ export default function Navbar() {
     { name: "Shop", href: "/shop", icon: Package },
     { name: "Players", href: "/players", icon: Users },
     { name: "Rules", href: "/rules", icon: Book },
-    { name: "Gallery", href: "/gallery", icon: Image },
+    { name: "Gallery", href: "/gallery", icon: Camera }, // Changed from Image to Camera
   ]
-
-  // Helper function to get user profile picture with guaranteed fallback
-  const getUserProfilePicture = (user: any) => {
-    if (user?.profilePicture && user.profilePicture.trim() !== "") {
-      return user.profilePicture
-    }
-    return `/placeholder.svg?height=32&width=32&text=${user?.username?.substring(0, 2).toUpperCase() || "U"}`
-  }
 
   return (
     <nav className="bg-gray-800/90 backdrop-blur-sm py-4 sticky top-0 z-50 border-b border-gray-700">
@@ -46,15 +38,13 @@ export default function Navbar() {
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2">
             <div className="relative w-8 h-8">
-              <Image
+              <SafeImage
                 src="/logo.png"
                 alt="Private Java SMP Logo"
                 width={32}
                 height={32}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = "/placeholder.svg?height=32&width=32&text=Logo"
-                }}
+                fallbackText="Logo"
+                priority
               />
             </div>
             <span className="text-xl font-bold text-white">Private Java SMP</span>
@@ -78,15 +68,12 @@ export default function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full overflow-hidden">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-600">
-                      <Image
-                        src={getUserProfilePicture(user) || "/placeholder.svg"}
+                      <SafeImage
+                        src={user.profilePicture}
                         alt={user.username || "User"}
                         fill
                         className="object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = `/placeholder.svg?height=32&width=32&text=${user?.username?.substring(0, 2).toUpperCase() || "U"}`
-                        }}
+                        fallbackText={user.username?.substring(0, 2).toUpperCase() || "U"}
                       />
                     </div>
                   </Button>
@@ -172,15 +159,12 @@ export default function Navbar() {
                 <div className="px-4 py-2">
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-600">
-                      <Image
-                        src={getUserProfilePicture(user) || "/placeholder.svg"}
+                      <SafeImage
+                        src={user.profilePicture}
                         alt={user.username || "User"}
                         fill
                         className="object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = `/placeholder.svg?height=32&width=32&text=${user?.username?.substring(0, 2).toUpperCase() || "U"}`
-                        }}
+                        fallbackText={user.username?.substring(0, 2).toUpperCase() || "U"}
                       />
                     </div>
                     <div>

@@ -1,19 +1,13 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Users, Server, Gift } from "lucide-react"
-import Image from "next/image"
-import InstallAppButton from "@/components/install-app-button"
-import { cookies } from "next/headers"
+import SafeImage from "@/components/safe-image"
+import { useAuth } from "@/context/auth-context"
 
 export default function Home() {
-  // Check if user is logged in by checking for session cookie
-  const cookieStore = cookies()
-  const sessionCookie = cookieStore.get("session")
-  const isLoggedIn = !!sessionCookie
-
-  // Define guaranteed fallback images
-  const heroImage = "/placeholder.svg?height=500&width=1920&text=Minecraft+World"
-  const logoImage = "/logo.png"
+  const { user } = useAuth()
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -23,35 +17,29 @@ export default function Home() {
         <div className="relative h-[500px] w-full overflow-hidden">
           <div className="absolute inset-0 bg-black/40 z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-green-900/50 to-blue-900/50 z-10"></div>
-          <Image
-            src={heroImage || "/placeholder.svg"}
+          <SafeImage
+            src="/placeholder.svg?height=500&width=1920&text=Minecraft+World"
             alt="Minecraft World"
             fill
             className="object-cover"
             priority
-            onError={(e) => {
-              const target = e.target as HTMLImageElement
-              target.src = "/placeholder.svg?height=500&width=1920&text=Minecraft+World"
-            }}
+            fallbackText="Minecraft World"
           />
         </div>
 
         <div className="container mx-auto px-4 absolute inset-0 z-20 flex flex-col items-center justify-center text-center">
           <div className="relative w-32 h-32 mb-6">
-            <Image
-              src={logoImage || "/placeholder.svg"}
+            <SafeImage
+              src="/logo.png"
               alt="Private Java SMP Logo"
               width={128}
               height={128}
               className="rounded-lg"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.src = "/placeholder.svg?height=128&width=128&text=Logo"
-              }}
+              fallbackText="Logo"
             />
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent mb-4">
+          <h1 className="text-5xl md:text-6xl font-bold animate-text-gradient bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 bg-clip-text text-transparent bg-300% mb-4">
             Private Java SMP
           </h1>
 
@@ -66,21 +54,22 @@ export default function Home() {
                 Get VIP Access
               </Button>
             </Link>
-            <Link href="/auth/signup">
-              <Button size="lg" variant="outline" className="border-white/20 hover:bg-white/10">
-                Sign Up Now
-              </Button>
-            </Link>
+            {!user ? (
+              <Link href="/auth/signup">
+                <Button size="lg" variant="outline" className="border-white/20 hover:bg-white/10">
+                  Sign Up Now
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/profile">
+                <Button size="lg" variant="outline" className="border-white/20 hover:bg-white/10">
+                  View Profile
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Install App Section - Only show for logged in users */}
-      {isLoggedIn && (
-        <div className="container mx-auto px-4 py-8">
-          <InstallAppButton />
-        </div>
-      )}
 
       {/* Features Section */}
       <div className="container mx-auto px-4 py-24">
@@ -130,19 +119,38 @@ export default function Home() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Join?</h2>
           <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
-            Sign up now and start your adventure on our Private Java SMP server!
+            {user
+              ? "Explore more features and connect with the community!"
+              : "Sign up now and start your adventure on our Private Java SMP server!"}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/signup">
-              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-200">
-                Create Account
-              </Button>
-            </Link>
-            <Link href="/gallery">
-              <Button size="lg" variant="outline" className="border-white hover:bg-white/10">
-                View Gallery
-              </Button>
-            </Link>
+            {!user ? (
+              <>
+                <Link href="/auth/signup">
+                  <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-200">
+                    Create Account
+                  </Button>
+                </Link>
+                <Link href="/gallery">
+                  <Button size="lg" variant="outline" className="border-white hover:bg-white/10">
+                    View Gallery
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/gallery">
+                  <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-200">
+                    View Gallery
+                  </Button>
+                </Link>
+                <Link href="/players">
+                  <Button size="lg" variant="outline" className="border-white hover:bg-white/10">
+                    View Players
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

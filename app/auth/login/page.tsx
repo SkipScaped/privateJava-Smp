@@ -9,10 +9,9 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import Image from "next/image"
+import SafeImage from "@/components/safe-image"
 import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
-import DiscordLoginButton from "@/components/discord-login-button"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -25,9 +24,6 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login, isLoading, user } = useAuth()
-
-  // Define a fallback logo image
-  const logoImage = "/logo.webp"
 
   useEffect(() => {
     // Check if user is already logged in
@@ -81,9 +77,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md bg-gray-800 border-gray-700">
         <CardHeader className="items-center">
           <div className="w-16 h-16 mb-4 relative">
-            {logoImage && (
-              <Image src={logoImage || "/placeholder.svg"} alt="Private Java SMP Logo" width={64} height={64} />
-            )}
+            <SafeImage src="/logo.png" alt="Private Java SMP Logo" width={64} height={64} fallbackText="Logo" />
           </div>
           <CardTitle className="text-2xl text-center">Login</CardTitle>
           <CardDescription className="text-center">Sign in to your Private Java SMP account</CardDescription>
@@ -176,15 +170,6 @@ export default function LoginPage() {
                 "Login"
               )}
             </Button>
-
-            <div className="relative w-full flex items-center justify-center my-2">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-600"></div>
-              </div>
-              <div className="relative bg-gray-800 px-4 text-sm text-gray-400">or</div>
-            </div>
-
-            <DiscordLoginButton redirectPath={searchParams.get("redirect") || "/profile"} />
 
             <div className="text-center text-sm">
               Don't have an account?{" "}

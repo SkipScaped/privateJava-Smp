@@ -1,35 +1,59 @@
-import { sql } from "@/lib/db"
-import GalleryUpload from "@/components/gallery-upload"
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import Image from "next/image"
-import { Calendar, User, AlertCircle } from "lucide-react"
-import { getServerSession } from "@/lib/session"
+import SafeImage from "@/components/safe-image"
+import { Calendar, User } from "lucide-react"
+import { useAuth } from "@/context/auth-context"
 
-async function getGalleryImages() {
-  try {
-    const images = await sql`
-      SELECT g.*, u.username 
-      FROM gallery g
-      LEFT JOIN users u ON g.user_id = u.id
-      ORDER BY g.created_at DESC
-    `
-    return { success: true, data: images }
-  } catch (error) {
-    console.error("Error fetching gallery images:", error)
-    return { success: false, error: "Failed to load gallery images" }
-  }
-}
+// Mock gallery images
+const mockGalleryImages = [
+  {
+    id: 1,
+    title: "My Castle Build",
+    description: "A medieval castle I built on the server",
+    image_url: "/placeholder.svg?height=300&width=400&text=Castle",
+    username: "DiamondMiner42",
+    created_at: "2023-05-15T12:00:00Z",
+  },
+  {
+    id: 2,
+    title: "Redstone Contraption",
+    description: "Automatic farm with sorting system",
+    image_url: "/placeholder.svg?height=300&width=400&text=Redstone",
+    username: "RedstoneWizard",
+    created_at: "2023-06-20T14:30:00Z",
+  },
+  {
+    id: 3,
+    title: "Underwater Base",
+    description: "My underwater glass dome base",
+    image_url: "/placeholder.svg?height=300&width=400&text=Underwater",
+    username: "BuildMaster99",
+    created_at: "2023-07-10T09:15:00Z",
+  },
+  {
+    id: 4,
+    title: "Mountain Village",
+    description: "Village built into the side of a mountain",
+    image_url: "/placeholder.svg?height=300&width=400&text=Mountain",
+    username: "ExplorerKing",
+    created_at: "2023-08-05T16:45:00Z",
+  },
+]
 
-export default async function GalleryPage() {
-  const galleryResult = await getGalleryImages()
-  const session = await getServerSession()
+export default function GalleryPage() {
+  const [images, setImages] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuth()
 
-  // Show error if gallery failed to load
-  const errorMessage = !galleryResult.success
-    ? "There was a problem loading the gallery. Please try again later."
-    : null
-
-  const images = galleryResult.success ? galleryResult.data : []
+  useEffect(() => {
+    // Simulate API call
+    setTimeout(() => {
+      setImages(mockGalleryImages)
+      setIsLoading(false)
+    }, 500)
+  }, [])
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -38,53 +62,55 @@ export default async function GalleryPage() {
         Share screenshots of your amazing builds and adventures on our Minecraft server!
       </p>
 
-      {errorMessage && (
-        <div className="bg-red-500/20 border border-red-500 rounded-md p-4 flex items-start max-w-2xl mx-auto mb-8">
-          <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-          <p>{errorMessage}</p>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
         <div className="lg:col-span-1">
-          {session?.user ? (
-            <GalleryUpload userId={session.user.id} />
-          ) : (
-            <Card className="bg-gray-800 border-gray-700">
-              <CardContent className="p-6 text-center">
-                <h3 className="text-lg font-medium mb-2">Want to share your builds?</h3>
-                <p className="text-gray-400 mb-4">Please log in to upload images to the gallery.</p>
+          <Card className="bg-gray-800 border-gray-700">
+            <CardContent className="p-6 text-center">
+              <h3 className="text-lg font-medium mb-2">Want to share your builds?</h3>
+              <p className="text-gray-400 mb-4">
+                {user
+                  ? "Gallery uploads are temporarily disabled for maintenance."
+                  : "Please log in to upload images to the gallery."}
+              </p>
+              {!user && (
                 <a href="/auth/login" className="text-green-400 hover:underline">
                   Login to contribute
                 </a>
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="lg:col-span-2">
           <h2 className="text-2xl font-bold mb-6">Recent Uploads</h2>
 
-          {images.length === 0 ? (
-            <div className="bg-gray-800 rounded-lg p-8 text-center">
-              <p className="text-gray-400">No images have been uploaded yet. Be the first!</p>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(4)].map((_, index) => (
+                <Card key={index} className="bg-gray-800 border-gray-700 animate-pulse">
+                  <div className="h-48 w-full bg-gray-700"></div>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="h-6 bg-gray-700 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-700 rounded w-full"></div>
+                    <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {images.map((image: any) => (
+              {images.map((image) => (
                 <Card
                   key={image.id}
-                  className="bg-gray-800 border-gray-700 overflow-hidden hover:border-gray-600 transition-colors"
+                  className="bg-gray-800 border-gray-700 overflow-hidden hover:border-green-500 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg hover:shadow-green-500/20"
                 >
                   <div className="relative h-48 w-full">
-                    <Image
-                      src={image.image_url || "/placeholder.svg?height=200&width=200&text=No+Image"}
+                    <SafeImage
+                      src={image.image_url}
                       alt={image.title}
                       fill
                       className="object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "/placeholder.svg?height=200&width=200&text=No+Image"
-                      }}
+                      fallbackText="No Image"
                     />
                   </div>
 

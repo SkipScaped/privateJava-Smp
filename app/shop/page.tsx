@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
+import SafeImage from "@/components/safe-image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -107,8 +107,14 @@ export default function ShopPage() {
                   </Badge>
                 </div>
               )}
-              <div className="relative w-full h-48">
-                <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-contain" />
+              <div className="relative w-40 h-40 mx-auto rounded-full overflow-hidden">
+                <SafeImage
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                  fallbackText={product.name}
+                />
               </div>
             </div>
 
@@ -133,11 +139,12 @@ export default function ShopPage() {
                   <DialogHeader>
                     <DialogTitle className="text-xl font-bold flex items-center gap-2">
                       <div className="relative w-6 h-6">
-                        <Image
-                          src={product.image || "/placeholder.svg"}
+                        <SafeImage
+                          src={product.image}
                           alt={product.name}
                           fill
                           className="object-contain rounded-md"
+                          fallbackText={product.name}
                         />
                       </div>
                       {product.name} Benefits
