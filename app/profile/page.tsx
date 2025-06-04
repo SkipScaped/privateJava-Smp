@@ -6,10 +6,10 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
-import { Camera, Save, User, Settings, Shield, Loader2, AlertCircle } from "lucide-react"
+import { Camera, Save, User, Loader2, AlertCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
@@ -225,14 +225,10 @@ export default function ProfilePage() {
 
       <div className="max-w-4xl mx-auto">
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Profile
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -253,7 +249,7 @@ export default function ProfilePage() {
                         <Image
                           src={
                             (isEditing ? editedProfile.profilePicture : profile.profilePicture) ||
-                            `/placeholder.svg?height=200&width=200&text=${profile.username.substring(0, 2).toUpperCase()}`
+                            `/placeholder.svg?height=200&width=200&text=${profile.username?.substring(0, 2).toUpperCase() || "U"}`
                           }
                           alt="Profile Picture"
                           fill
@@ -373,51 +369,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="settings" className="mt-6">
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Account Settings
-                </CardTitle>
-                <CardDescription>Manage your account settings and preferences</CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
-                  <Input
-                    id="current-password"
-                    type="password"
-                    className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-              </CardContent>
-
-              <CardFooter>
-                <Button className="bg-green-600 hover:bg-green-700">Update Password</Button>
-              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>

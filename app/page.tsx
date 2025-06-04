@@ -2,12 +2,18 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Users, Server, Gift } from "lucide-react"
 import Image from "next/image"
-import ServerStatus from "@/components/server-status"
+import InstallAppButton from "@/components/install-app-button"
+import { cookies } from "next/headers"
 
 export default function Home() {
-  // Define fallback images to avoid empty strings
+  // Check if user is logged in by checking for session cookie
+  const cookieStore = cookies()
+  const sessionCookie = cookieStore.get("session")
+  const isLoggedIn = !!sessionCookie
+
+  // Define guaranteed fallback images
   const heroImage = "/placeholder.svg?height=500&width=1920&text=Minecraft+World"
-  const logoImage = "/logo.webp"
+  const logoImage = "/logo.png"
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -17,19 +23,31 @@ export default function Home() {
         <div className="relative h-[500px] w-full overflow-hidden">
           <div className="absolute inset-0 bg-black/40 z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-green-900/50 to-blue-900/50 z-10"></div>
-          {/* Use the defined fallback image */}
-          <Image src={heroImage || "/placeholder.svg"} alt="Minecraft World" fill className="object-cover" priority />
+          <Image
+            src={heroImage || "/placeholder.svg"}
+            alt="Minecraft World"
+            fill
+            className="object-cover"
+            priority
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = "/placeholder.svg?height=500&width=1920&text=Minecraft+World"
+            }}
+          />
         </div>
 
         <div className="container mx-auto px-4 absolute inset-0 z-20 flex flex-col items-center justify-center text-center">
           <div className="relative w-32 h-32 mb-6">
-            {/* Use the defined logo image */}
             <Image
               src={logoImage || "/placeholder.svg"}
               alt="Private Java SMP Logo"
               width={128}
               height={128}
               className="rounded-lg"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = "/placeholder.svg?height=128&width=128&text=Logo"
+              }}
             />
           </div>
 
@@ -57,12 +75,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Server Status Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-md mx-auto">
-          <ServerStatus />
+      {/* Install App Section - Only show for logged in users */}
+      {isLoggedIn && (
+        <div className="container mx-auto px-4 py-8">
+          <InstallAppButton />
         </div>
-      </div>
+      )}
 
       {/* Features Section */}
       <div className="container mx-auto px-4 py-24">

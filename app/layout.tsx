@@ -13,11 +13,31 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Private Java SMP",
   description: "Join our private Java SMP Minecraft server",
+  manifest: "/manifest.json",
   icons: {
-    icon: "/logo.webp",
-    apple: "/logo.webp",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
-    generator: 'v0.dev'
+  generator: "v0.dev",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Private Java SMP",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Private Java SMP",
+    title: "Private Java SMP",
+    description: "Join our private Java SMP Minecraft server",
+  },
+  twitter: {
+    card: "summary",
+    title: "Private Java SMP",
+    description: "Join our private Java SMP Minecraft server",
+  },
 }
 
 export default function RootLayout({
@@ -27,6 +47,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <meta name="theme-color" content="#16a34a" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Private Java SMP" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AuthProvider>

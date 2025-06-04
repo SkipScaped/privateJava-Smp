@@ -32,13 +32,30 @@ export default function Navbar() {
     { name: "Gallery", href: "/gallery", icon: Image },
   ]
 
+  // Helper function to get user profile picture with guaranteed fallback
+  const getUserProfilePicture = (user: any) => {
+    if (user?.profilePicture && user.profilePicture.trim() !== "") {
+      return user.profilePicture
+    }
+    return `/placeholder.svg?height=32&width=32&text=${user?.username?.substring(0, 2).toUpperCase() || "U"}`
+  }
+
   return (
     <nav className="bg-gray-800/90 backdrop-blur-sm py-4 sticky top-0 z-50 border-b border-gray-700">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2">
             <div className="relative w-8 h-8">
-              <Image src="/logo.webp" alt="Private Java SMP Logo" width={32} height={32} />
+              <Image
+                src="/logo.png"
+                alt="Private Java SMP Logo"
+                width={32}
+                height={32}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = "/placeholder.svg?height=32&width=32&text=Logo"
+                }}
+              />
             </div>
             <span className="text-xl font-bold text-white">Private Java SMP</span>
           </Link>
@@ -62,14 +79,14 @@ export default function Navbar() {
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full overflow-hidden">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-600">
                       <Image
-                        src={
-                          user.profilePicture
-                            ? user.profilePicture
-                            : `/placeholder.svg?height=32&width=32&text=${user.username.substring(0, 2).toUpperCase()}`
-                        }
-                        alt={user.username}
+                        src={getUserProfilePicture(user) || "/placeholder.svg"}
+                        alt={user.username || "User"}
                         fill
                         className="object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = `/placeholder.svg?height=32&width=32&text=${user?.username?.substring(0, 2).toUpperCase() || "U"}`
+                        }}
                       />
                     </div>
                   </Button>
@@ -88,15 +105,8 @@ export default function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-gray-700" />
                   <Link href="/profile">
-                    <DropdownMenuItem className="cursor-pointer hover:bg-gray-700">Profile</DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer hover:bg-gray-700">View Profile</DropdownMenuItem>
                   </Link>
-                  <DropdownMenuItem
-                    className="cursor-pointer text-red-400 hover:bg-red-900/20 hover:text-red-300"
-                    onClick={logout}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -163,14 +173,14 @@ export default function Navbar() {
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-600">
                       <Image
-                        src={
-                          user.profilePicture
-                            ? user.profilePicture
-                            : `/placeholder.svg?height=32&width=32&text=${user.username.substring(0, 2).toUpperCase()}`
-                        }
-                        alt={user.username}
+                        src={getUserProfilePicture(user) || "/placeholder.svg"}
+                        alt={user.username || "User"}
                         fill
                         className="object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = `/placeholder.svg?height=32&width=32&text=${user?.username?.substring(0, 2).toUpperCase() || "U"}`
+                        }}
                       />
                     </div>
                     <div>
@@ -189,7 +199,7 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <User className="h-5 w-5" />
-                  Profile
+                  View Profile
                 </Link>
                 <button
                   className="flex items-center gap-2 w-full text-left py-3 px-4 text-red-400 hover:bg-red-900/20"

@@ -78,10 +78,13 @@ export default async function GalleryPage() {
                 >
                   <div className="relative h-48 w-full">
                     <Image
-                      src={image.image_url ? image.image_url : "/placeholder.svg?height=200&width=200&text=No+Image"}
+                      src={image.image_url || "/placeholder.svg?height=200&width=200&text=No+Image"}
                       alt={image.title}
                       fill
                       className="object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg?height=200&width=200&text=No+Image"
+                      }}
                     />
                   </div>
 
