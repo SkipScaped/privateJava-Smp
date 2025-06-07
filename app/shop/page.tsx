@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import SafeImage from "@/components/safe-image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useCart, type VipProduct } from "@/context/cart-context"
 import { ShoppingCart, Check, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import SafeImage from "@/components/safe-image"
 
 const vipProducts: VipProduct[] = [
   {
@@ -86,8 +86,8 @@ export default function ShopPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold text-center mb-6">VIP Packages</h1>
-      <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+      <h1 className="text-4xl font-bold text-center mb-6 minecraft-title">VIP Packages</h1>
+      <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto minecraft-text">
         Enhance your Minecraft experience with our VIP packages. Unlock exclusive perks, discounts, and features!
       </p>
 
@@ -95,19 +95,19 @@ export default function ShopPage() {
         {vipProducts.map((product) => (
           <Card
             key={product.id}
-            className={`bg-gray-800 border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 ${
-              product.tier === "gold" ? "ring-2 ring-yellow-500" : ""
+            className={`bg-gray-800 border-none minecraft-card overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 ${
+              product.tier === "gold" ? "ring-4 ring-yellow-500" : ""
             }`}
           >
             <div className="relative">
               {product.tier === "gold" && (
                 <div className="absolute top-0 right-0 z-10 m-2">
-                  <Badge className="bg-yellow-500 hover:bg-yellow-600 flex items-center gap-1">
+                  <Badge className="bg-yellow-500 hover:bg-yellow-600 flex items-center gap-1 minecraft-border rounded-none">
                     <Star className="h-3 w-3 fill-current" /> Most Popular
                   </Badge>
                 </div>
               )}
-              <div className="relative w-40 h-40 mx-auto rounded-full overflow-hidden">
+              <div className="relative w-40 h-40 mx-auto mt-6 rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
                 <SafeImage
                   src={product.image}
                   alt={product.name}
@@ -119,31 +119,31 @@ export default function ShopPage() {
             </div>
 
             <CardHeader className="pb-2">
-              <CardTitle className="text-center text-2xl">{product.name}</CardTitle>
+              <CardTitle className="text-center text-2xl minecraft-text">{product.name}</CardTitle>
             </CardHeader>
 
             <CardContent className="flex flex-col items-center">
-              <div className="text-3xl font-bold text-center mb-4">${product.price}</div>
+              <div className="text-3xl font-bold text-center mb-4 minecraft-text">${product.price}</div>
 
-              <Badge className={`mb-4 ${getBadgeColor(product.tier)}`}>
+              <Badge className={`mb-4 ${getBadgeColor(product.tier)} minecraft-border rounded-none`}>
                 {product.tier.charAt(0).toUpperCase() + product.tier.slice(1)} Tier
               </Badge>
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full mb-4">
+                  <Button variant="outline" className="w-full mb-4 minecraft-button rounded-none">
                     View Benefits
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-gray-800 text-white border-gray-700">
+                <DialogContent className="bg-gray-800 text-white border-none minecraft-card rounded-none">
                   <DialogHeader>
-                    <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                      <div className="relative w-6 h-6">
+                    <DialogTitle className="text-xl font-bold minecraft-text flex items-center gap-2">
+                      <div className="relative w-6 h-6 rounded-none overflow-hidden minecraft-border">
                         <SafeImage
                           src={product.image}
                           alt={product.name}
                           fill
-                          className="object-contain rounded-md"
+                          className="object-cover"
                           fallbackText={product.name}
                         />
                       </div>
@@ -155,7 +155,7 @@ export default function ShopPage() {
                       {vipBenefits[product.tier].map((benefit, index) => (
                         <li key={index} className="flex items-start">
                           <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span>{benefit}</span>
+                          <span className="minecraft-text text-sm">{benefit}</span>
                         </li>
                       ))}
                     </ul>
@@ -166,7 +166,7 @@ export default function ShopPage() {
 
             <CardFooter>
               <Button
-                className={`w-full ${
+                className={`w-full minecraft-button rounded-none ${
                   product.tier === "bronze"
                     ? "bg-amber-600 hover:bg-amber-700"
                     : product.tier === "silver"
@@ -190,21 +190,21 @@ export default function ShopPage() {
         ))}
       </div>
 
-      <div className="mt-16 bg-gray-800 rounded-lg p-8 max-w-3xl mx-auto">
-        <h2 className="text-2xl font-bold mb-4 text-center">Why Choose VIP?</h2>
+      <div className="mt-16 bg-gray-800 rounded-none p-8 max-w-3xl mx-auto minecraft-card">
+        <h2 className="text-2xl font-bold mb-4 text-center minecraft-text">Why Choose VIP?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-green-500/20 rounded-none flex items-center justify-center mb-4 minecraft-border">
               <Star className="h-8 w-8 text-green-500" />
             </div>
-            <h3 className="font-semibold mb-2">Exclusive Access</h3>
-            <p className="text-gray-400 text-sm">
+            <h3 className="font-semibold mb-2 minecraft-text">Exclusive Access</h3>
+            <p className="text-gray-400 text-sm minecraft-text">
               Get access to exclusive areas, kits, and features unavailable to regular players.
             </p>
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-blue-500/20 rounded-none flex items-center justify-center mb-4 minecraft-border">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8 text-blue-500"
@@ -220,14 +220,14 @@ export default function ShopPage() {
                 />
               </svg>
             </div>
-            <h3 className="font-semibold mb-2">Store Discounts</h3>
-            <p className="text-gray-400 text-sm">
+            <h3 className="font-semibold mb-2 minecraft-text">Store Discounts</h3>
+            <p className="text-gray-400 text-sm minecraft-text">
               Enjoy discounts on all store purchases, saving you money on in-game items.
             </p>
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-purple-500/20 rounded-none flex items-center justify-center mb-4 minecraft-border">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8 text-purple-500"
@@ -243,8 +243,8 @@ export default function ShopPage() {
                 />
               </svg>
             </div>
-            <h3 className="font-semibold mb-2">Community Status</h3>
-            <p className="text-gray-400 text-sm">
+            <h3 className="font-semibold mb-2 minecraft-text">Community Status</h3>
+            <p className="text-gray-400 text-sm minecraft-text">
               Stand out with special chat emblems and recognition in our community.
             </p>
           </div>

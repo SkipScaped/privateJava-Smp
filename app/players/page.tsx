@@ -3,73 +3,40 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import Image from "next/image"
 import { Search, UserPlus } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/context/auth-context"
-import SafeImage from "@/components/safe-image"
 
-// Mock player data
-const mockPlayers = [
-  {
-    id: 1,
-    username: "DiamondMiner42",
-    profilePicture: "/placeholder.svg?height=100&width=100&text=DM",
-    joinDate: "2023-01-15",
-    rank: "Gold VIP",
-  },
-  {
-    id: 2,
-    username: "RedstoneWizard",
-    profilePicture: "/placeholder.svg?height=100&width=100&text=RW",
-    joinDate: "2023-02-20",
-    rank: "Silver VIP",
-  },
-  {
-    id: 3,
-    username: "BuildMaster99",
-    profilePicture: "/placeholder.svg?height=100&width=100&text=BM",
-    joinDate: "2023-03-10",
-    rank: "Bronze VIP",
-  },
-  {
-    id: 4,
-    username: "ExplorerKing",
-    profilePicture: "/placeholder.svg?height=100&width=100&text=EK",
-    joinDate: "2023-04-05",
-    rank: "Member",
-  },
-]
-
+// This would be replaced with a real API call to get registered users
 export default function PlayersPage() {
   const [players, setPlayers] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useAuth()
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      // Add the current user to the players list if logged in
-      const allPlayers = [...mockPlayers]
-      if (user) {
-        const userExists = allPlayers.some((player) => player.username === user.username)
-        if (!userExists) {
-          allPlayers.unshift({
-            id: 999,
-            username: user.username,
-            profilePicture:
-              user.profilePicture ||
-              `/placeholder.svg?height=100&width=100&text=${user.username.substring(0, 2).toUpperCase()}`,
-            joinDate: new Date().toISOString().split("T")[0],
-            rank: user.rank || "Member",
-          })
-        }
+    // In a real app, this would fetch users from your database
+    const fetchPlayers = async () => {
+      try {
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        // In the real implementation, this would be an API call
+        // const response = await fetch('/api/users')
+        // const data = await response.json()
+        // setPlayers(data.users)
+
+        // For now, we'll just set an empty array since we want to show only real users
+        setPlayers([])
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Failed to fetch players:", error)
+        setIsLoading(false)
       }
-      setPlayers(allPlayers)
-      setIsLoading(false)
-    }, 500)
-  }, [user])
+    }
+
+    fetchPlayers()
+  }, [])
 
   const filteredPlayers =
     searchTerm.trim() === ""
@@ -144,17 +111,16 @@ export default function PlayersPage() {
               {filteredPlayers.map((player) => (
                 <Card
                   key={player.id}
-                  className="bg-gray-800 border-gray-700 hover:border-green-500 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg hover:shadow-green-500/20"
+                  className="bg-gray-800 border-gray-700 hover:border-green-500 transition-all duration-300 transform hover:-translate-y-1"
                 >
                   <CardContent className="p-6 flex flex-col items-center">
                     <div className="relative w-20 h-20 rounded-full overflow-hidden mb-4 border-2 border-gray-700">
-                      <SafeImage
+                      <Image
                         src={player.profilePicture || "/placeholder.svg?height=100&width=100"}
                         alt={player.username}
                         width={80}
                         height={80}
                         className="object-cover"
-                        fallbackText={player.username.substring(0, 2).toUpperCase()}
                       />
                     </div>
 

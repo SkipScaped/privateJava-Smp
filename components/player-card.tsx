@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
-import SafeImage from "@/components/safe-image"
+import Image from "next/image"
 import type { Player } from "@/lib/data"
 
 interface PlayerCardProps {
@@ -24,12 +24,15 @@ export default function PlayerCard({ player }: PlayerCardProps) {
     <Card className="bg-gray-800 border-gray-700 hover:border-gray-500 transition-colors">
       <CardContent className="p-6 flex flex-col items-center">
         <div className="relative w-20 h-20 rounded-full overflow-hidden mb-4">
-          <SafeImage
-            src={player.profilePicture}
+          <Image
+            src={
+              player.profilePicture
+                ? player.profilePicture
+                : `/placeholder.svg?height=100&width=100&text=${player.username.substring(0, 2).toUpperCase()}`
+            }
             alt={player.username}
             fill
             className="object-cover"
-            fallbackText={player.username.substring(0, 2).toUpperCase()}
           />
         </div>
 

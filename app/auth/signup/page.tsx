@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import SafeImage from "@/components/safe-image"
 import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
+import SafeImage from "@/components/safe-image"
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -86,7 +86,7 @@ export default function SignupPage() {
     <div className="container mx-auto px-4 py-12 flex justify-center">
       <Card className="w-full max-w-md bg-gray-800 border-gray-700">
         <CardHeader className="items-center">
-          <div className="w-16 h-16 mb-4 relative">
+          <div className="w-16 h-16 mb-4 relative rounded-full overflow-hidden">
             <SafeImage src="/logo.png" alt="Private Java SMP Logo" width={64} height={64} fallbackText="Logo" />
           </div>
           <CardTitle className="text-2xl text-center">Sign Up</CardTitle>

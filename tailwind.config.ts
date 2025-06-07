@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss"
 
-const config = {
+const config: Config = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -19,6 +19,9 @@ const config = {
       },
     },
     extend: {
+      backgroundSize: {
+        "300%": "300%",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -69,19 +72,18 @@ const config = {
           to: { height: "0" },
         },
         "text-gradient": {
-          to: {
-            backgroundPosition: "200% center",
-          },
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "text-gradient": "text-gradient 3s ease infinite",
+        "text-gradient": "text-gradient 8s linear infinite",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+}
 
 export default config

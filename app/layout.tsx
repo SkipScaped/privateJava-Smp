@@ -14,7 +14,12 @@ export const metadata: Metadata = {
   title: "Private Java SMP",
   description: "Join our private Java SMP Minecraft server",
   icons: {
-    icon: "/logo.png",
+    icon: [
+      { url: "/logo.png", type: "image/png" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    apple: "/logo.png",
+    shortcut: "/logo.png",
   },
     generator: 'v0.dev'
 }
@@ -27,8 +32,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" href="/logo.png" />
+        <link rel="shortcut icon" href="/logo.png" />
         <link rel="apple-touch-icon" href="/logo.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>

@@ -5,22 +5,29 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCart } from "@/context/cart-context"
-import { Trash2, Plus, Minus, CreditCard, AlertCircle, ShoppingCart } from "lucide-react"
+import { Trash2, Plus, Minus, CreditCard, AlertCircle, ShoppingCart, LogIn } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/auth-context"
 
 // Discord invite link
-const DISCORD_INVITE_URL = "https://discord.com/invite/Dku5n2nWB9"
+const DISCORD_INVITE_URL = "https://discord.gg/fvmA4jph"
 // Default logo image
-const DEFAULT_LOGO = "/logo.webp"
+const DEFAULT_LOGO = "/logo.png"
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart()
+  const { user } = useAuth()
   const [checkoutComplete, setCheckoutComplete] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [countdown, setCountdown] = useState(5)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleCheckout = () => {
     // Process the checkout
@@ -52,9 +59,9 @@ export default function CartPage() {
   if (checkoutComplete) {
     return (
       <div className="container mx-auto px-4 py-12 flex flex-col items-center">
-        <div className="bg-green-500/20 border border-green-500 rounded-lg p-8 max-w-md w-full text-center">
+        <div className="bg-green-500/20 border-4 border-green-800 rounded-none p-8 max-w-md w-full text-center minecraft-card">
           <div className="mb-6">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-green-700 rounded-none flex items-center justify-center mx-auto mb-4 minecraft-border">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8 text-white"
@@ -65,26 +72,30 @@ export default function CartPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Purchase Successful!</h2>
-            <p className="text-gray-300">Thank you for your purchase! Your VIP benefits will be activated soon.</p>
+            <h2 className="text-2xl font-bold mb-2 minecraft-title">Purchase Successful!</h2>
+            <p className="text-gray-300 minecraft-text">
+              Thank you for your purchase! Your VIP benefits will be activated soon.
+            </p>
           </div>
 
-          <div className="bg-gray-700 p-4 rounded-lg mb-6">
-            <p className="text-sm mb-2">
+          <div className="bg-gray-700 p-4 rounded-none mb-6 minecraft-border">
+            <p className="text-sm mb-2 minecraft-text">
               Redirecting you to our Discord server in <span className="font-bold text-white">{countdown}</span>{" "}
               seconds...
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-400 minecraft-text">
               You'll need to join our Discord server to complete the setup process and receive your VIP benefits.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href={DISCORD_INVITE_URL} className="w-full">
-              <Button className="w-full bg-indigo-600 hover:bg-indigo-700">Join Discord Now</Button>
+              <Button className="w-full bg-indigo-700 hover:bg-indigo-800 minecraft-button rounded-none">
+                Join Discord Now
+              </Button>
             </a>
             <Link href="/shop" className="w-full">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full minecraft-button rounded-none">
                 Return to Shop
               </Button>
             </Link>
@@ -97,16 +108,16 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-12 flex flex-col items-center">
-        <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full text-center">
+        <div className="bg-gray-800 rounded-none p-8 max-w-md w-full text-center minecraft-card">
           <div className="flex justify-center mb-6">
             <ShoppingCart className="h-16 w-16 text-gray-500" />
           </div>
-          <h2 className="text-2xl font-bold mb-4">Your Cart is Empty</h2>
-          <p className="mb-6 text-gray-400">
+          <h2 className="text-2xl font-bold mb-4 minecraft-title">Your Cart is Empty</h2>
+          <p className="mb-6 text-gray-400 minecraft-text">
             Looks like you haven't added any items to your cart yet. Check out our VIP packages!
           </p>
           <Link href="/shop">
-            <Button size="lg" className="bg-green-600 hover:bg-green-700">
+            <Button size="lg" className="bg-green-700 hover:bg-green-800 minecraft-button rounded-none">
               Browse Shop
             </Button>
           </Link>
@@ -117,8 +128,8 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold text-center mb-6">Your Cart</h1>
-      <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+      <h1 className="text-4xl font-bold text-center mb-6 minecraft-title">Your Cart</h1>
+      <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto minecraft-text">
         Review your items and proceed to checkout to unlock your VIP benefits on our Minecraft server.
       </p>
 
@@ -128,52 +139,49 @@ export default function CartPage() {
             {cartItems.map((item) => (
               <Card
                 key={item.id}
-                className="bg-gray-800 border-gray-700 overflow-hidden hover:border-gray-600 transition-colors"
+                className="bg-gray-800 border-none minecraft-card overflow-hidden hover:border-gray-600 transition-colors"
               >
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="relative w-24 h-24 flex-shrink-0">
-                      <Image
-                        src={item.image || "/placeholder.svg?height=96&width=96&text=Product"}
-                        alt={item.name}
-                        fill
-                        className="object-contain rounded-md"
-                      />
+                    <div className="relative w-24 h-24 flex-shrink-0 minecraft-border rounded-none">
+                      <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-contain" />
                     </div>
 
                     <div className="flex-grow text-center sm:text-left">
-                      <h3 className="text-xl font-semibold">{item.name}</h3>
-                      <p className="text-gray-400">${item.price.toFixed(2)}</p>
+                      <h3 className="text-xl font-semibold minecraft-text">{item.name}</h3>
+                      <p className="text-gray-400 minecraft-text">${item.price.toFixed(2)}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-full"
+                        className="h-8 w-8 rounded-none minecraft-button"
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
 
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
+                      <span className="w-8 text-center font-medium minecraft-text">{item.quantity}</span>
 
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-full"
+                        className="h-8 w-8 rounded-none minecraft-button"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
 
-                    <div className="text-right font-semibold w-20">${(item.price * item.quantity).toFixed(2)}</div>
+                    <div className="text-right font-semibold w-20 minecraft-text">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </div>
 
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-full"
+                      className="text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-none minecraft-button"
                       onClick={() => removeFromCart(item.id)}
                     >
                       <Trash2 className="h-5 w-5" />
@@ -186,14 +194,14 @@ export default function CartPage() {
         </div>
 
         <div>
-          <Card className="bg-gray-800 border-gray-700 sticky top-24">
+          <Card className="bg-gray-800 border-none minecraft-card sticky top-24">
             <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
+              <CardTitle className="minecraft-text">Order Summary</CardTitle>
             </CardHeader>
 
             <CardContent className="space-y-4">
               {cartItems.map((item) => (
-                <div key={item.id} className="flex justify-between">
+                <div key={item.id} className="flex justify-between minecraft-text">
                   <span>
                     {item.name} x {item.quantity}
                   </span>
@@ -201,51 +209,71 @@ export default function CartPage() {
                 </div>
               ))}
 
-              <div className="border-t border-gray-700 pt-4 flex justify-between font-bold text-lg">
+              <div className="border-t-2 border-gray-700 pt-4 flex justify-between font-bold text-lg minecraft-text">
                 <span>Total</span>
                 <span>${getTotalPrice().toFixed(2)}</span>
               </div>
             </CardContent>
 
             <CardFooter className="flex flex-col gap-4">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Checkout via Discord
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-gray-800 text-white border-gray-700">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-bold">Checkout via Discord</DialogTitle>
-                  </DialogHeader>
-                  <div className="mt-4 space-y-4">
-                    <div className="relative w-full h-48 mb-4 flex items-center justify-center">
-                      <Image
-                        src={DEFAULT_LOGO || "/placeholder.svg"}
-                        alt="Discord Checkout"
-                        width={120}
-                        height={120}
-                        className="rounded-md"
-                      />
-                    </div>
-
-                    <div className="flex items-start gap-2 bg-yellow-500/20 border border-yellow-500 rounded-md p-3">
-                      <AlertCircle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm">
-                        After clicking "Complete Purchase", you'll be redirected to our Discord server to complete the
-                        payment process and receive your VIP benefits.
-                      </p>
-                    </div>
-
-                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleCheckout}>
-                      Complete Purchase (${getTotalPrice().toFixed(2)})
-                    </Button>
+              {mounted && !user ? (
+                <div className="w-full space-y-4">
+                  <div className="flex items-start gap-2 bg-blue-500/20 border-2 border-blue-500 rounded-none p-3 minecraft-border">
+                    <LogIn className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm minecraft-text">
+                      Please log in to complete your purchase and receive your VIP benefits.
+                    </p>
                   </div>
-                </DialogContent>
-              </Dialog>
+                  <Link href="/auth/login?redirect=/cart" className="w-full">
+                    <Button className="w-full bg-blue-700 hover:bg-blue-800 minecraft-button rounded-none">
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Login to Checkout
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full bg-green-700 hover:bg-green-800 minecraft-button rounded-none">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Checkout via Discord
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-gray-800 text-white border-none minecraft-card rounded-none">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold minecraft-text">Checkout via Discord</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4 space-y-4">
+                      <div className="relative w-full h-48 mb-4 flex items-center justify-center">
+                        <Image
+                          src={DEFAULT_LOGO || "/placeholder.svg"}
+                          alt="Discord Checkout"
+                          width={120}
+                          height={120}
+                          className="rounded-none minecraft-border"
+                        />
+                      </div>
 
-              <Button variant="outline" className="w-full" onClick={clearCart}>
+                      <div className="flex items-start gap-2 bg-yellow-500/20 border-2 border-yellow-500 rounded-none p-3 minecraft-border">
+                        <AlertCircle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm minecraft-text">
+                          After clicking "Complete Purchase", you'll be redirected to our Discord server to complete the
+                          payment process and receive your VIP benefits.
+                        </p>
+                      </div>
+
+                      <Button
+                        className="w-full bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
+                        onClick={handleCheckout}
+                      >
+                        Complete Purchase (${getTotalPrice().toFixed(2)})
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              <Button variant="outline" className="w-full minecraft-button rounded-none" onClick={clearCart}>
                 Clear Cart
               </Button>
             </CardFooter>

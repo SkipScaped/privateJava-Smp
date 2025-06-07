@@ -25,20 +25,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(false) // Changed to false by default to avoid loading state issues
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
 
   // Check for existing session on mount
   useEffect(() => {
-    const checkSession = async () => {
+    const checkSession = () => {
       try {
-        setIsLoading(true)
-        const response = await fetch("/api/auth/session")
-        const data = await response.json()
-
-        if (data.success && data.user) {
-          setUser(data.user)
+        // Check localStorage for user data
+        const savedUser = localStorage.getItem("user")
+        if (savedUser) {
+          setUser(JSON.parse(savedUser))
         }
       } catch (error) {
         console.error("Error checking session:", error)
@@ -54,22 +52,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
 
-      // Simplified login - just set a mock user for testing
-      setUser({
-        id: 1,
-        username: username,
-        email: `${username}@example.com`,
-        rank: "Member",
-        profilePicture: `/placeholder.svg?height=200&width=200&text=${username.substring(0, 2).toUpperCase()}`,
-      })
+      // Simple validation - accept any username/password combination for demo
+      if (username.trim() && password.trim()) {
+        const userData = {
+          id: 1,
+          username: username,
+          email: `${username}@example.com`,
+          // Removed rank field so no "Member" tag will show
+          profilePicture: undefined,
+        }
 
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${username}!`,
-        variant: "default",
-      })
+        setUser(userData)
+        localStorage.setItem("user", JSON.stringify(userData))
 
-      return true
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${username}!`,
+          variant: "default",
+        })
+
+        return true
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Please enter both username and password",
+          variant: "destructive",
+        })
+        return false
+      }
     } catch (error) {
       console.error("Login error:", error)
       toast({
@@ -87,14 +97,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
 
-      // Simplified signup - just return success
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created. You can now log in.",
-        variant: "default",
-      })
-
-      return true
+      // Simple validation
+      if (username.trim() && email.trim() && password.trim()) {
+        toast({
+          title: "Registration successful",
+          description: "Your account has been created. You can now log in.",
+          variant: "default",
+        })
+        return true
+      } else {
+        toast({
+          title: "Registration failed",
+          description: "Please fill in all fields",
+          variant: "destructive",
+        })
+        return false
+      }
     } catch (error) {
       console.error("Signup error:", error)
       toast({
@@ -112,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
       setUser(null)
+      localStorage.removeItem("user")
       router.push("/")
       toast({
         title: "Logged out",
@@ -127,13 +146,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      setIsLoading(true)
-      // Just return the current user - simplified
-      setIsLoading(false)
+      const savedUser = localStorage.getItem("user")
+      if (savedUser) {
+        setUser(JSON.parse(savedUser))
+      }
     } catch (error) {
       console.error("Error refreshing user:", error)
       setUser(null)
-      setIsLoading(false)
     }
   }
 

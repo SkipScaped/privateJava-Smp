@@ -128,9 +128,6 @@ export default function GalleryUpload({ userId }: { userId: number }) {
     setError(null)
   }
 
-  // Define a guaranteed placeholder image for preview
-  const previewImageSrc = preview || "/placeholder.svg?height=200&width=200&text=Preview"
-
   return (
     <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
@@ -170,7 +167,7 @@ export default function GalleryUpload({ userId }: { userId: number }) {
                 {preview ? (
                   <div className="relative w-full h-48">
                     <img
-                      src={previewImageSrc || "/placeholder.svg"}
+                      src={preview ? preview : "/placeholder.svg?height=200&width=200&text=Preview"}
                       alt="Preview"
                       className="w-full h-full object-contain"
                     />
