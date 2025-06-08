@@ -2,19 +2,22 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Users, Server, Gift, Copy, Check } from "lucide-react"
+import { Users, Server, Gift, Copy, Check, ShoppingCart } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
+import { useCart } from "@/context/cart-context"
 import { useEffect, useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 
 export default function Home() {
   const { user } = useAuth()
+  const { getCartCount } = useCart()
   const [mounted, setMounted] = useState(false)
   const [copied, setCopied] = useState(false)
   const { toast } = useToast()
 
   const serverIP = "private-java-smp.aternos.me:42323"
+  const cartCount = getCartCount()
 
   useEffect(() => {
     setMounted(true)
@@ -49,8 +52,7 @@ export default function Home() {
         </div>
 
         <div className="container mx-auto px-4 absolute inset-0 z-20 flex flex-col items-center justify-center text-center">
-          {/* Fixed logo display */}
-          {/* Much bigger logo that actually shows */}
+          {/* Logo */}
           <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 mb-6 sm:mb-8 relative minecraft-border border-8 border-gray-600 bg-gray-800/80 p-4 rounded-none">
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-green-500 bg-white/10">
               <Image
@@ -111,21 +113,34 @@ export default function Home() {
                 </Button>
               </Link>
             ) : (
-              <Link href="/profile">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/20 hover:bg-white/10 minecraft-button rounded-none"
-                >
-                  View Profile
-                </Button>
-              </Link>
+              <div className="flex gap-4">
+                <Link href="/profile">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-white/20 hover:bg-white/10 minecraft-button rounded-none"
+                  >
+                    View Profile
+                  </Button>
+                </Link>
+                {mounted && cartCount > 0 && (
+                  <Link href="/cart">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="border-orange-500 text-orange-400 hover:bg-orange-500/10 minecraft-button rounded-none relative"
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Cart ({cartCount})
+                    </Button>
+                  </Link>
+                )}
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Rest of the component remains the same */}
       {/* Features Section */}
       <div className="container mx-auto px-4 py-16 sm:py-24">
         <div className="text-center mb-12 sm:mb-16">
