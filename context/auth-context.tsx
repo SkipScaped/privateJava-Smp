@@ -33,29 +33,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // First check localStorage for demo mode
-        const savedUser = localStorage.getItem("user")
+        // Always check localStorage first for immediate response
+        const savedUser = localStorage.getItem("minecraft_smp_user")
         if (savedUser) {
-          setUser(JSON.parse(savedUser))
-          setIsLoading(false)
-          return
+          try {
+            const userData = JSON.parse(savedUser)
+            setUser(userData)
+            setIsLoading(false)
+            return
+          } catch (e) {
+            localStorage.removeItem("minecraft_smp_user")
+          }
         }
 
-        // Then check server session for production
+        // Try to check server session with timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+
         try {
           const response = await fetch("/api/auth/session", {
             method: "GET",
             credentials: "include",
+            signal: controller.signal,
           })
+
+          clearTimeout(timeoutId)
 
           if (response.ok) {
             const data = await response.json()
             if (data.user) {
               setUser(data.user)
+              // Also save to localStorage for faster future loads
+              localStorage.setItem("minecraft_smp_user", JSON.stringify(data.user))
             }
           }
         } catch (error) {
-          console.log("Server session check failed, using demo mode")
+          clearTimeout(timeoutId)
+          console.log("Server session check failed, using localStorage only")
         }
       } catch (error) {
         console.error("Error checking session:", error)
@@ -71,62 +85,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
 
-      // First try server authentication
+      // Input validation
+      if (!username.trim() || !password.trim()) {
+        toast({
+          title: "Login failed",
+          description: "Please enter both username and password",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      // Try server authentication with timeout
+      let serverAuthSuccess = false
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+
         const response = await fetch("/api/auth/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
+          signal: controller.signal,
           body: JSON.stringify({ username, password }),
         })
 
+        clearTimeout(timeoutId)
         const data = await response.json()
 
         if (response.ok && data.success) {
           setUser(data.user)
+          localStorage.setItem("minecraft_smp_user", JSON.stringify(data.user))
+          serverAuthSuccess = true
+
           toast({
             title: "Login successful",
             description: `Welcome back, ${data.user.username}!`,
             variant: "default",
           })
           return true
-        } else {
-          // If server auth fails, fall back to demo mode
-          console.log("Server auth failed, using demo mode")
         }
       } catch (error) {
-        console.log("Server auth error, using demo mode:", error)
+        console.log("Server auth failed, using demo mode:", error)
       }
 
-      // Demo mode fallback - accept any username/password combination
-      if (username.trim() && password.trim()) {
+      // If server auth failed, use demo mode with localStorage
+      if (!serverAuthSuccess) {
         const userData = {
-          id: 1,
-          username: username,
-          email: `${username}@example.com`,
+          id: Date.now(), // Use timestamp as unique ID
+          username: username.trim(),
+          email: `${username.trim()}@example.com`,
           profilePicture: undefined,
         }
 
         setUser(userData)
-        localStorage.setItem("user", JSON.stringify(userData))
+        localStorage.setItem("minecraft_smp_user", JSON.stringify(userData))
 
         toast({
           title: "Login successful",
-          description: `Welcome back, ${username}!`,
+          description: `Welcome back, ${username}! (Demo Mode)`,
           variant: "default",
         })
 
         return true
-      } else {
-        toast({
-          title: "Incorrect password or username",
-          description: "Please enter both username and password",
-          variant: "destructive",
-        })
-        return false
       }
+
+      return false
     } catch (error) {
       console.error("Login error:", error)
       toast({
@@ -144,16 +169,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
 
-      // Try server registration first
+      // Input validation
+      if (!username.trim() || !email.trim() || !password.trim()) {
+        toast({
+          title: "Registration failed",
+          description: "Please fill in all fields",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      // Try server registration with timeout
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000)
+
         const response = await fetch("/api/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          signal: controller.signal,
           body: JSON.stringify({ username, email, password }),
         })
 
+        clearTimeout(timeoutId)
         const data = await response.json()
 
         if (response.ok && data.success) {
@@ -169,21 +209,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Demo mode fallback
-      if (username.trim() && email.trim() && password.trim()) {
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created. You can now log in.",
-          variant: "default",
-        })
-        return true
-      } else {
-        toast({
-          title: "Registration failed",
-          description: "Please fill in all fields",
-          variant: "destructive",
-        })
-        return false
-      }
+      toast({
+        title: "Registration successful",
+        description: "Your account has been created. You can now log in. (Demo Mode)",
+        variant: "default",
+      })
+      return true
     } catch (error) {
       console.error("Signup error:", error)
       toast({
@@ -201,19 +232,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
 
-      // Try server logout first
+      // Try server logout with timeout
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+
         await fetch("/api/auth/logout", {
           method: "POST",
           credentials: "include",
+          signal: controller.signal,
         })
+
+        clearTimeout(timeoutId)
       } catch (error) {
-        console.log("Server logout failed, clearing local session")
+        console.log("Server logout failed, clearing local session only")
       }
 
-      // Clear local state regardless
+      // Always clear local state
       setUser(null)
-      localStorage.removeItem("user")
+      localStorage.removeItem("minecraft_smp_user")
       router.push("/")
 
       toast({
@@ -231,23 +268,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     try {
       // Check localStorage first
-      const savedUser = localStorage.getItem("user")
+      const savedUser = localStorage.getItem("minecraft_smp_user")
       if (savedUser) {
-        setUser(JSON.parse(savedUser))
-        return
+        try {
+          const userData = JSON.parse(savedUser)
+          setUser(userData)
+          return
+        } catch (e) {
+          localStorage.removeItem("minecraft_smp_user")
+        }
       }
 
-      // Then check server session
+      // Then try server session with timeout
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+
         const response = await fetch("/api/auth/session", {
           method: "GET",
           credentials: "include",
+          signal: controller.signal,
         })
+
+        clearTimeout(timeoutId)
 
         if (response.ok) {
           const data = await response.json()
           if (data.user) {
             setUser(data.user)
+            localStorage.setItem("minecraft_smp_user", JSON.stringify(data.user))
           }
         }
       } catch (error) {

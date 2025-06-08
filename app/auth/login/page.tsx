@@ -63,27 +63,35 @@ export default function LoginPage() {
     setError(null)
     setSuccess(null)
 
-    if (!formData.username || !formData.password) {
+    if (!formData.username.trim() || !formData.password.trim()) {
       setError("Please enter both username and password")
       return
     }
 
     const loginSuccess = await login(formData.username, formData.password)
 
-    if (!loginSuccess) {
-      setError("Incorrect password or username")
-    }
-
     if (loginSuccess) {
-      // Check if there's a redirect URL
-      const redirect = searchParams.get("redirect")
-      router.push(redirect || "/profile")
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        const redirect = searchParams.get("redirect")
+        router.push(redirect || "/profile")
+      }, 100)
+    } else {
+      setError("Incorrect password or username")
     }
   }
 
   // Don't render until mounted to avoid hydration issues
   if (!mounted) {
-    return null
+    return (
+      <div className="container mx-auto px-4 py-12 flex justify-center">
+        <div className="w-full max-w-md bg-gray-800 border-none minecraft-card rounded-none p-8">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
