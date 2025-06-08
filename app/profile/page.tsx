@@ -15,7 +15,7 @@ import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 
 export default function ProfilePage() {
-  const { user, isLoading, refreshUser } = useAuth()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
@@ -33,9 +33,10 @@ export default function ProfilePage() {
     setMounted(true)
   }, [])
 
+  // Only redirect after we're mounted and not loading
   useEffect(() => {
-    // Only redirect if we're mounted and not loading and no user
     if (mounted && !isLoading && !user) {
+      console.log("No user found, redirecting to login")
       router.push("/auth/login?redirect=/profile")
     }
   }, [mounted, isLoading, user, router])
@@ -117,7 +118,7 @@ export default function ProfilePage() {
     }
   }
 
-  // Show loading while checking authentication
+  // Show loading while checking authentication or not mounted
   if (!mounted || isLoading) {
     return (
       <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
@@ -129,7 +130,7 @@ export default function ProfilePage() {
     )
   }
 
-  // Show loading if no user (will redirect)
+  // Don't render anything if no user (will redirect)
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">

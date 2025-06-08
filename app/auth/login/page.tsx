@@ -33,8 +33,8 @@ export default function LoginPage() {
   useEffect(() => {
     if (mounted && user) {
       const redirect = searchParams.get("redirect")
-      const targetUrl = redirect || "/profile"
-      console.log("User logged in, redirecting to:", targetUrl)
+      const targetUrl = redirect || "/"
+      console.log("User already logged in, redirecting to:", targetUrl)
       router.push(targetUrl)
       return
     }
@@ -72,13 +72,15 @@ export default function LoginPage() {
     console.log("Login result:", loginSuccess)
 
     if (loginSuccess) {
-      // Force redirect after successful login
+      // Get redirect path and navigate
       const redirect = searchParams.get("redirect")
-      const targetUrl = redirect || "/profile"
+      const targetUrl = redirect || "/"
       console.log("Login successful, redirecting to:", targetUrl)
 
-      // Use window.location for more reliable redirect
-      window.location.href = targetUrl
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        router.push(targetUrl)
+      }, 100)
     } else {
       setError("Incorrect password or username")
     }
