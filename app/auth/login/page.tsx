@@ -70,6 +70,10 @@ export default function LoginPage() {
 
     const loginSuccess = await login(formData.username, formData.password)
 
+    if (!loginSuccess) {
+      setError("Incorrect password or username")
+    }
+
     if (loginSuccess) {
       // Check if there's a redirect URL
       const redirect = searchParams.get("redirect")

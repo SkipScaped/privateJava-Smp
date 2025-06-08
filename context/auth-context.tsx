@@ -31,12 +31,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
-    const checkSession = () => {
+    const checkSession = async () => {
       try {
-        // Check localStorage for user data
+        // First check localStorage for demo mode
         const savedUser = localStorage.getItem("user")
         if (savedUser) {
           setUser(JSON.parse(savedUser))
+          setIsLoading(false)
+          return
+        }
+
+        // Then check server session for production
+        try {
+          const response = await fetch("/api/auth/session", {
+            method: "GET",
+            credentials: "include",
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            if (data.user) {
+              setUser(data.user)
+            }
+          }
+        } catch (error) {
+          console.log("Server session check failed, using demo mode")
         }
       } catch (error) {
         console.error("Error checking session:", error)
@@ -52,13 +71,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
 
-      // Simple validation - accept any username/password combination for demo
+      // First try server authentication
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ username, password }),
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.success) {
+          setUser(data.user)
+          toast({
+            title: "Login successful",
+            description: `Welcome back, ${data.user.username}!`,
+            variant: "default",
+          })
+          return true
+        } else {
+          // If server auth fails, fall back to demo mode
+          console.log("Server auth failed, using demo mode")
+        }
+      } catch (error) {
+        console.log("Server auth error, using demo mode:", error)
+      }
+
+      // Demo mode fallback - accept any username/password combination
       if (username.trim() && password.trim()) {
         const userData = {
           id: 1,
           username: username,
           email: `${username}@example.com`,
-          // Removed rank field so no "Member" tag will show
           profilePicture: undefined,
         }
 
@@ -74,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return true
       } else {
         toast({
-          title: "Login failed",
+          title: "Incorrect password or username",
           description: "Please enter both username and password",
           variant: "destructive",
         })
@@ -97,7 +144,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
 
-      // Simple validation
+      // Try server registration first
+      try {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, email, password }),
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.success) {
+          toast({
+            title: "Registration successful",
+            description: "Your account has been created. You can now log in.",
+            variant: "default",
+          })
+          return true
+        }
+      } catch (error) {
+        console.log("Server registration failed, using demo mode")
+      }
+
+      // Demo mode fallback
       if (username.trim() && email.trim() && password.trim()) {
         toast({
           title: "Registration successful",
@@ -129,9 +200,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       setIsLoading(true)
+
+      // Try server logout first
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "include",
+        })
+      } catch (error) {
+        console.log("Server logout failed, clearing local session")
+      }
+
+      // Clear local state regardless
       setUser(null)
       localStorage.removeItem("user")
       router.push("/")
+
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
@@ -146,9 +230,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     try {
+      // Check localStorage first
       const savedUser = localStorage.getItem("user")
       if (savedUser) {
         setUser(JSON.parse(savedUser))
+        return
+      }
+
+      // Then check server session
+      try {
+        const response = await fetch("/api/auth/session", {
+          method: "GET",
+          credentials: "include",
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.user) {
+            setUser(data.user)
+          }
+        }
+      } catch (error) {
+        console.log("Server session refresh failed")
       }
     } catch (error) {
       console.error("Error refreshing user:", error)
