@@ -7,14 +7,12 @@ import Navbar from "@/components/navbar"
 import { CartProvider } from "@/context/cart-context"
 import { AuthProvider } from "@/context/auth-context"
 import { Toaster } from "@/components/ui/toaster"
-import PWAInstall from "@/components/pwa-install"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Private Java SMP",
   description: "Join our private Java SMP Minecraft server",
-  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: "/logo.png", type: "image/png" },
@@ -22,25 +20,6 @@ export const metadata: Metadata = {
     ],
     apple: "/logo.png",
     shortcut: "/logo.png",
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Private Java SMP",
-  },
-  formatDetection: {
-    telephone: false,
-  },
-  openGraph: {
-    type: "website",
-    siteName: "Private Java SMP",
-    title: "Private Java SMP",
-    description: "Join our private Java SMP Minecraft server",
-  },
-  twitter: {
-    card: "summary",
-    title: "Private Java SMP",
-    description: "Join our private Java SMP Minecraft server",
   },
     generator: 'v0.dev'
 }
@@ -56,15 +35,7 @@ export default function RootLayout({
         <link rel="icon" href="/logo.png" />
         <link rel="shortcut icon" href="/logo.png" />
         <link rel="apple-touch-icon" href="/logo.png" />
-        <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#059669" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Private Java SMP" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-TileColor" content="#059669" />
-        <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
@@ -79,28 +50,10 @@ export default function RootLayout({
                   </div>
                 </footer>
               </div>
-              <PWAInstall />
               <Toaster />
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
-                });
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   )
