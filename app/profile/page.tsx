@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -41,31 +41,52 @@ export default function ProfilePage() {
   }, [mounted, isLoading, user, router])
 
   useEffect(() => {
-    if (user) {
-      const initialBio =
-        "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server."
-      const initialProfilePicture = user.profilePicture || ""
+    if (user && mounted) {
+      // Try to load saved profile data from localStorage first
+      const savedProfileKey = `profile_${user.username}`
+      const savedProfileData = localStorage.getItem(savedProfileKey)
 
-      setEditData({
-        bio: initialBio,
-        profilePicture: initialProfilePicture,
-      })
+      if (savedProfileData) {
+        // Use saved data if it exists
+        const parsedData = JSON.parse(savedProfileData)
+        setEditData(parsedData)
+        setSavedData(parsedData)
+      } else {
+        // Only set initial demo data if no saved data exists
+        const initialBio =
+          "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server."
+        const initialProfilePicture = user.profilePicture || ""
 
-      setSavedData({
-        bio: initialBio,
-        profilePicture: initialProfilePicture,
-      })
+        const initialData = {
+          bio: initialBio,
+          profilePicture: initialProfilePicture,
+        }
+
+        setEditData(initialData)
+        setSavedData(initialData)
+      }
     }
-  }, [user])
+  }, [user, mounted])
 
   const handleSave = () => {
-    // Save the edited data
+    // Save the edited data to state
     setSavedData({
       bio: editData.bio,
       profilePicture: editData.profilePicture,
     })
 
-    // In a real app, this would save to the database
+    // Persist to localStorage with user-specific key
+    if (user) {
+      const savedProfileKey = `profile_${user.username}`
+      localStorage.setItem(
+        savedProfileKey,
+        JSON.stringify({
+          bio: editData.bio,
+          profilePicture: editData.profilePicture,
+        }),
+      )
+    }
+
     toast({
       title: "Profile Updated",
       description: "Your profile has been successfully updated!",
@@ -173,7 +194,6 @@ export default function ProfilePage() {
                     <Badge className="bg-yellow-600 text-white rounded-none minecraft-border">{user.rank}</Badge>
                   )}
                 </div>
-                <CardDescription className="minecraft-text">{user.email}</CardDescription>
                 <div className="flex items-center gap-1 text-sm text-gray-400 mt-2">
                   <Calendar className="h-4 w-4" />
                   <span>Joined: {new Date().toLocaleDateString()}</span>

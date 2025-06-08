@@ -50,8 +50,18 @@ export default function Home() {
 
         <div className="container mx-auto px-4 absolute inset-0 z-20 flex flex-col items-center justify-center text-center">
           {/* Fixed logo display */}
-          <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 mb-4 sm:mb-6 relative rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
-            <Image src="/logo.png" alt="Private Java SMP Logo" fill className="object-contain" priority />
+          {/* Much bigger logo that actually shows */}
+          <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 mb-6 sm:mb-8 relative minecraft-border border-8 border-gray-600 bg-gray-800/80 p-4 rounded-none">
+            <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-green-500 bg-white/10">
+              <Image
+                src="/logo.png"
+                alt="Private Java SMP Logo"
+                width={256}
+                height={256}
+                className="object-contain w-full h-full"
+                priority
+              />
+            </div>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold animate-text-gradient bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-300% bg-clip-text text-transparent mb-4 minecraft-title">

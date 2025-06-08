@@ -59,17 +59,12 @@ export default function Navbar() {
 
             {mounted && user ? (
               <div className="flex items-center gap-4">
-                <Link href="/profile" className="flex items-center gap-2 minecraft-text">
-                  <div className="relative w-8 h-8 rounded-none overflow-hidden minecraft-border border-2 border-gray-700">
-                    <SafeImage
-                      src={user.profilePicture}
-                      alt={user.username || "User"}
-                      fill
-                      className="object-cover"
-                      fallbackText={user.username?.substring(0, 2).toUpperCase() || "U"}
-                    />
-                  </div>
-                  <span className="text-gray-300 hover:text-white">{user.username}</span>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors minecraft-text"
+                >
+                  <User className="h-4 w-4" />
+                  Profile
                 </Link>
 
                 <Button

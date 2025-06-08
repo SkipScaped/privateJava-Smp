@@ -4,8 +4,10 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useCart } from "@/context/cart-context"
-import { Trash2, Plus, Minus, CreditCard, AlertCircle, ShoppingCart, LogIn } from "lucide-react"
+import { Trash2, Plus, Minus, CreditCard, AlertCircle, ShoppingCart, LogIn, User, Shield } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -23,16 +25,52 @@ export default function CartPage() {
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [countdown, setCountdown] = useState(5)
   const [mounted, setMounted] = useState(false)
+  const [showUsernameVerification, setShowUsernameVerification] = useState(false)
+  const [minecraftUsername, setMinecraftUsername] = useState("")
+  const [usernameError, setUsernameError] = useState("")
+  const [isVerifying, setIsVerifying] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  const handleUsernameVerification = () => {
+    setIsVerifying(true)
+    setUsernameError("")
+
+    // Simulate verification delay
+    setTimeout(() => {
+      if (!minecraftUsername.trim()) {
+        setUsernameError("Please enter your Minecraft username")
+        setIsVerifying(false)
+        return
+      }
+
+      // Check if the entered username matches the logged-in user's username
+      if (minecraftUsername.trim().toLowerCase() !== user?.username?.toLowerCase()) {
+        setUsernameError("Incorrect")
+        setIsVerifying(false)
+        return
+      }
+
+      // Username matches - proceed with checkout
+      setIsVerifying(false)
+      setShowUsernameVerification(false)
+      handleCheckout()
+    }, 1500)
+  }
+
   const handleCheckout = () => {
     // Process the checkout
     setCheckoutComplete(true)
     clearCart()
+  }
+
+  const initiateCheckout = () => {
+    setShowUsernameVerification(true)
+    setMinecraftUsername("")
+    setUsernameError("")
   }
 
   useEffect(() => {
@@ -232,42 +270,92 @@ export default function CartPage() {
                   </Link>
                 </div>
               ) : (
-                <Dialog>
+                <Dialog open={showUsernameVerification} onOpenChange={setShowUsernameVerification}>
                   <DialogTrigger asChild>
-                    <Button className="w-full bg-green-700 hover:bg-green-800 minecraft-button rounded-none">
+                    <Button
+                      className="w-full bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
+                      onClick={initiateCheckout}
+                    >
                       <CreditCard className="mr-2 h-4 w-4" />
                       Checkout via Discord
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-gray-800 text-white border-none minecraft-card rounded-none">
+                  <DialogContent className="bg-gray-800 text-white border-none minecraft-card rounded-none max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="text-xl font-bold minecraft-text">Checkout via Discord</DialogTitle>
+                      <DialogTitle className="text-xl font-bold minecraft-text flex items-center gap-2">
+                        <Shield className="h-6 w-6 text-yellow-500" />
+                        Verify Minecraft Username
+                      </DialogTitle>
                     </DialogHeader>
                     <div className="mt-4 space-y-4">
-                      <div className="relative w-full h-48 mb-4 flex items-center justify-center">
-                        <Image
-                          src={DEFAULT_LOGO || "/placeholder.svg"}
-                          alt="Discord Checkout"
-                          width={120}
-                          height={120}
-                          className="rounded-none minecraft-border"
-                        />
-                      </div>
-
                       <div className="flex items-start gap-2 bg-yellow-500/20 border-2 border-yellow-500 rounded-none p-3 minecraft-border">
                         <AlertCircle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                         <p className="text-sm minecraft-text">
-                          After clicking "Complete Purchase", you'll be redirected to our Discord server to complete the
-                          payment process and receive your VIP benefits.
+                          Please confirm your Minecraft username to proceed with the purchase. This ensures VIP benefits
+                          are applied to the correct account.
                         </p>
                       </div>
 
-                      <Button
-                        className="w-full bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
-                        onClick={handleCheckout}
-                      >
-                        Complete Purchase (${getTotalPrice().toFixed(2)})
-                      </Button>
+                      <div className="space-y-2">
+                        <Label htmlFor="minecraft-username" className="minecraft-text">
+                          <User className="inline h-4 w-4 mr-1" />
+                          Your Minecraft Username
+                        </Label>
+                        <Input
+                          id="minecraft-username"
+                          type="text"
+                          placeholder="Enter your Minecraft username"
+                          value={minecraftUsername}
+                          onChange={(e) => {
+                            setMinecraftUsername(e.target.value)
+                            setUsernameError("")
+                          }}
+                          className="bg-gray-700 border-gray-600 text-white rounded-none minecraft-border"
+                          disabled={isVerifying}
+                        />
+                        {usernameError && <p className="text-red-400 text-sm minecraft-text">{usernameError}</p>}
+                      </div>
+
+                      <div className="bg-gray-700 p-3 rounded-none minecraft-border">
+                        <p className="text-xs text-gray-400 minecraft-text">
+                          <strong>Account:</strong> {user?.username}
+                        </p>
+                        <p className="text-xs text-gray-400 minecraft-text mt-1">
+                          Enter the same username to verify your identity.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          className="flex-1 bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
+                          onClick={handleUsernameVerification}
+                          disabled={isVerifying || !minecraftUsername.trim()}
+                        >
+                          {isVerifying ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Verifying...
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="mr-2 h-4 w-4" />
+                              Verify & Checkout
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="minecraft-button rounded-none"
+                          onClick={() => setShowUsernameVerification(false)}
+                          disabled={isVerifying}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+
+                      <p className="text-xs text-center text-gray-400 minecraft-text">
+                        Total: ${getTotalPrice().toFixed(2)}
+                      </p>
                     </div>
                   </DialogContent>
                 </Dialog>
