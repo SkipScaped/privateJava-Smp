@@ -97,13 +97,13 @@ export default function RulesPage() {
   ]
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold text-center mb-12">Server Rules</h1>
+    <div className="container mx-auto px-4 py-12 bg-gray-900 min-h-screen">
+      <h1 className="text-4xl font-bold text-center mb-12 minecraft-title">Server Rules</h1>
 
-      <Card className="bg-gray-800 border-gray-700 max-w-4xl mx-auto">
+      <Card className="bg-gray-800 border-none minecraft-card max-w-4xl mx-auto rounded-none">
         <CardHeader>
-          <CardTitle className="text-2xl">Private Java SMP Rules</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl minecraft-text">Private Java SMP Rules</CardTitle>
+          <CardDescription className="minecraft-text">
             Please read and follow these rules to ensure a positive experience for everyone on the server. Failure to
             comply with these rules may result in warnings, temporary bans, or permanent bans depending on the severity
             and frequency of violations.
@@ -112,18 +112,37 @@ export default function RulesPage() {
 
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="building">Building</TabsTrigger>
-              <TabsTrigger value="pvp">PvP</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 bg-gray-700 minecraft-border rounded-none">
+              <TabsTrigger
+                value="general"
+                className="minecraft-button rounded-none data-[state=active]:bg-green-700 data-[state=active]:text-white minecraft-text"
+              >
+                General
+              </TabsTrigger>
+              <TabsTrigger
+                value="building"
+                className="minecraft-button rounded-none data-[state=active]:bg-green-700 data-[state=active]:text-white minecraft-text"
+              >
+                Building
+              </TabsTrigger>
+              <TabsTrigger
+                value="pvp"
+                className="minecraft-button rounded-none data-[state=active]:bg-green-700 data-[state=active]:text-white minecraft-text"
+              >
+                PvP
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="mt-6">
               <Accordion type="single" collapsible className="w-full">
                 {generalRules.map((rule) => (
-                  <AccordionItem key={rule.id} value={rule.id}>
-                    <AccordionTrigger className="text-lg font-medium">{rule.title}</AccordionTrigger>
-                    <AccordionContent className="text-gray-300">{rule.content}</AccordionContent>
+                  <AccordionItem key={rule.id} value={rule.id} className="border-gray-700">
+                    <AccordionTrigger className="text-lg font-medium minecraft-text hover:text-green-400 rounded-none">
+                      {rule.title}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-300 minecraft-text bg-gray-700/50 p-4 minecraft-border border-2 border-gray-600 rounded-none">
+                      {rule.content}
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>
@@ -132,9 +151,13 @@ export default function RulesPage() {
             <TabsContent value="building" className="mt-6">
               <Accordion type="single" collapsible className="w-full">
                 {buildingRules.map((rule) => (
-                  <AccordionItem key={rule.id} value={rule.id}>
-                    <AccordionTrigger className="text-lg font-medium">{rule.title}</AccordionTrigger>
-                    <AccordionContent className="text-gray-300">{rule.content}</AccordionContent>
+                  <AccordionItem key={rule.id} value={rule.id} className="border-gray-700">
+                    <AccordionTrigger className="text-lg font-medium minecraft-text hover:text-green-400 rounded-none">
+                      {rule.title}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-300 minecraft-text bg-gray-700/50 p-4 minecraft-border border-2 border-gray-600 rounded-none">
+                      {rule.content}
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>
@@ -143,9 +166,13 @@ export default function RulesPage() {
             <TabsContent value="pvp" className="mt-6">
               <Accordion type="single" collapsible className="w-full">
                 {pvpRules.map((rule) => (
-                  <AccordionItem key={rule.id} value={rule.id}>
-                    <AccordionTrigger className="text-lg font-medium">{rule.title}</AccordionTrigger>
-                    <AccordionContent className="text-gray-300">{rule.content}</AccordionContent>
+                  <AccordionItem key={rule.id} value={rule.id} className="border-gray-700">
+                    <AccordionTrigger className="text-lg font-medium minecraft-text hover:text-green-400 rounded-none">
+                      {rule.title}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-300 minecraft-text bg-gray-700/50 p-4 minecraft-border border-2 border-gray-600 rounded-none">
+                      {rule.content}
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>

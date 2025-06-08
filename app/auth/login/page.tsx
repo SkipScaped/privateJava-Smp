@@ -89,47 +89,49 @@ export default function LoginPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-white">Loading...</div>
+        <div className="text-white minecraft-text">Loading...</div>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+      <Card className="w-full max-w-md bg-gray-800 border-none minecraft-card rounded-none">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 relative">
+          <div className="w-16 h-16 mx-auto mb-4 relative rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
             <SafeImage
               src="/logo.png"
               alt="Private Java SMP Logo"
               width={64}
               height={64}
               fallbackText="🎮"
-              className="rounded-lg"
+              className="rounded-none"
             />
           </div>
-          <CardTitle className="text-2xl text-white">Login</CardTitle>
-          <CardDescription className="text-gray-300">Sign in to your Private Java SMP account</CardDescription>
+          <CardTitle className="text-2xl text-white minecraft-title">Login</CardTitle>
+          <CardDescription className="text-gray-300 minecraft-text">
+            Sign in to your Private Java SMP account
+          </CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-red-500/20 border border-red-500 rounded p-3 flex items-start">
+              <div className="bg-red-500/20 border-2 border-red-500 rounded-none p-3 flex items-start minecraft-border">
                 <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-200">{error}</p>
+                <p className="text-sm text-red-200 minecraft-text">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="bg-green-500/20 border border-green-500 rounded p-3 flex items-start">
+              <div className="bg-green-500/20 border-2 border-green-500 rounded-none p-3 flex items-start minecraft-border">
                 <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-green-200">{success}</p>
+                <p className="text-sm text-green-200 minecraft-text">{success}</p>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-white">
+              <Label htmlFor="username" className="text-white minecraft-text">
                 Username
               </Label>
               <Input
@@ -139,13 +141,13 @@ export default function LoginPage() {
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500"
+                className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500 rounded-none minecraft-border minecraft-text"
                 disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white">
+              <Label htmlFor="password" className="text-white minecraft-text">
                 Password
               </Label>
               <div className="relative">
@@ -157,12 +159,12 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500 pr-10"
+                  className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500 pr-10 rounded-none minecraft-border minecraft-text"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white minecraft-button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
@@ -176,17 +178,21 @@ export default function LoginPage() {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 border-gray-600 bg-gray-700 text-green-600 focus:ring-green-500"
+                className="h-4 w-4 border-gray-600 bg-gray-700 text-green-600 focus:ring-green-500 minecraft-border"
                 disabled={isLoading}
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300 minecraft-text">
                 Remember me
               </label>
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700 text-white minecraft-button rounded-none"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -197,7 +203,7 @@ export default function LoginPage() {
               )}
             </Button>
 
-            <div className="text-center text-sm text-gray-300">
+            <div className="text-center text-sm text-gray-300 minecraft-text">
               Don't have an account?{" "}
               <Link href="/auth/signup" className="text-green-400 hover:underline">
                 Sign up
