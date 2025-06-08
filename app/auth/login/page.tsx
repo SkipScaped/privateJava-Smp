@@ -31,20 +31,19 @@ export default function LoginPage() {
   }, [])
 
   useEffect(() => {
-    // Check if user is already logged in
     if (mounted && user) {
       const redirect = searchParams.get("redirect")
-      router.push(redirect || "/profile")
+      const targetUrl = redirect || "/profile"
+      console.log("User logged in, redirecting to:", targetUrl)
+      router.push(targetUrl)
       return
     }
 
-    // Check if user just registered
     const registered = searchParams.get("registered")
     if (registered === "true") {
       setSuccess("Registration successful! Please log in.")
     }
 
-    // Check if there's a redirect URL
     const redirect = searchParams.get("redirect")
     if (redirect) {
       setError(`You need to log in to access ${redirect}`)
@@ -54,7 +53,6 @@ export default function LoginPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    // Clear errors when user starts typing
     if (error) setError(null)
   }
 
@@ -63,68 +61,73 @@ export default function LoginPage() {
     setError(null)
     setSuccess(null)
 
+    console.log("Login attempt:", formData.username)
+
     if (!formData.username.trim() || !formData.password.trim()) {
       setError("Please enter both username and password")
       return
     }
 
     const loginSuccess = await login(formData.username, formData.password)
+    console.log("Login result:", loginSuccess)
 
     if (loginSuccess) {
-      // Small delay to ensure state is updated
-      setTimeout(() => {
-        const redirect = searchParams.get("redirect")
-        router.push(redirect || "/profile")
-      }, 100)
+      // Force redirect after successful login
+      const redirect = searchParams.get("redirect")
+      const targetUrl = redirect || "/profile"
+      console.log("Login successful, redirecting to:", targetUrl)
+
+      // Use window.location for more reliable redirect
+      window.location.href = targetUrl
     } else {
       setError("Incorrect password or username")
     }
   }
 
-  // Don't render until mounted to avoid hydration issues
   if (!mounted) {
     return (
-      <div className="container mx-auto px-4 py-12 flex justify-center">
-        <div className="w-full max-w-md bg-gray-800 border-none minecraft-card rounded-none p-8">
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-green-500" />
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-white">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 flex justify-center">
-      <Card className="w-full max-w-md bg-gray-800 border-none minecraft-card">
-        <CardHeader className="items-center">
-          <div className="w-16 h-16 mb-4 relative rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
-            <SafeImage src="/logo.png" alt="Private Java SMP Logo" width={64} height={64} fallbackText="Logo" />
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+        <CardHeader className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 relative">
+            <SafeImage
+              src="/logo.png"
+              alt="Private Java SMP Logo"
+              width={64}
+              height={64}
+              fallbackText="🎮"
+              className="rounded-lg"
+            />
           </div>
-          <CardTitle className="text-2xl text-center minecraft-title">Login</CardTitle>
-          <CardDescription className="text-center minecraft-text">
-            Sign in to your Private Java SMP account
-          </CardDescription>
+          <CardTitle className="text-2xl text-white">Login</CardTitle>
+          <CardDescription className="text-gray-300">Sign in to your Private Java SMP account</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-red-500/20 border-2 border-red-500 rounded-none p-3 flex items-start minecraft-border">
+              <div className="bg-red-500/20 border border-red-500 rounded p-3 flex items-start">
                 <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-                <p className="text-sm minecraft-text">{error}</p>
+                <p className="text-sm text-red-200">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="bg-green-500/20 border-2 border-green-500 rounded-none p-3 flex items-start minecraft-border">
+              <div className="bg-green-500/20 border border-green-500 rounded p-3 flex items-start">
                 <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <p className="text-sm minecraft-text">{success}</p>
+                <p className="text-sm text-green-200">{success}</p>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username" className="minecraft-text">
+              <Label htmlFor="username" className="text-white">
                 Username
               </Label>
               <Input
@@ -134,13 +137,13 @@ export default function LoginPage() {
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500 rounded-none minecraft-border"
+                className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500"
                 disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="minecraft-text">
+              <Label htmlFor="password" className="text-white">
                 Password
               </Label>
               <div className="relative">
@@ -152,7 +155,7 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500 pr-10 rounded-none minecraft-border"
+                  className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500 pr-10"
                   disabled={isLoading}
                 />
                 <button
@@ -171,21 +174,17 @@ export default function LoginPage() {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 rounded-none border-gray-600 bg-gray-700 text-green-600 focus:ring-green-500 minecraft-border"
+                className="h-4 w-4 border-gray-600 bg-gray-700 text-green-600 focus:ring-green-500"
                 disabled={isLoading}
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300 minecraft-text">
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
                 Remember me
               </label>
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
-            <Button
-              type="submit"
-              className="w-full bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -196,7 +195,7 @@ export default function LoginPage() {
               )}
             </Button>
 
-            <div className="text-center text-sm minecraft-text">
+            <div className="text-center text-sm text-gray-300">
               Don't have an account?{" "}
               <Link href="/auth/signup" className="text-green-400 hover:underline">
                 Sign up
