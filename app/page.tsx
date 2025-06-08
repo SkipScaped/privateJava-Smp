@@ -23,7 +23,17 @@ export default function Home() {
     setMounted(true)
   }, [])
 
+  // Update the copyToClipboard function to check if user is logged in
   const copyToClipboard = async () => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "You need to be logged in to copy the server IP.",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
       await navigator.clipboard.writeText(serverIP)
       setCopied(true)
@@ -79,20 +89,39 @@ export default function Home() {
           <div className="bg-gray-800/90 p-4 sm:p-6 rounded-none mb-6 sm:mb-8 minecraft-card border-4 border-gray-700 w-full max-w-md">
             <h3 className="text-lg font-bold mb-2 minecraft-text">Server IP</h3>
             <div className="flex items-center gap-2 bg-gray-700 p-2 sm:p-3 rounded-none minecraft-border border-2 border-gray-600">
-              <code className="text-green-400 font-mono flex-1 minecraft-text text-sm sm:text-base overflow-auto">
-                {serverIP}
-              </code>
-              <Button
-                size="sm"
-                onClick={copyToClipboard}
-                className="bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
-                disabled={copied}
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
+              {mounted && user ? (
+                <>
+                  <code className="text-green-400 font-mono flex-1 minecraft-text text-sm sm:text-base overflow-auto">
+                    {serverIP}
+                  </code>
+                  <Button
+                    size="sm"
+                    onClick={copyToClipboard}
+                    className="bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
+                    disabled={copied}
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <code className="text-gray-500 font-mono flex-1 minecraft-text text-sm sm:text-base overflow-auto blur-sm select-none">
+                    ••••••••••••••••••••••••
+                  </code>
+                  <Button
+                    size="sm"
+                    onClick={copyToClipboard}
+                    className="bg-gray-600 hover:bg-gray-700 minecraft-button rounded-none"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
             <p className="text-xs sm:text-sm text-gray-400 mt-2 minecraft-text">
-              Note: You need to login to access the server
+              {mounted && user
+                ? "Click the button to copy the server IP"
+                : "You need to login to view and copy the server IP"}
             </p>
           </div>
 
