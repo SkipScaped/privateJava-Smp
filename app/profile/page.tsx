@@ -7,24 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Loader2, Calendar, Edit, Save, X, Upload, AlertCircle } from "lucide-react"
+import { Loader2, Calendar, Edit, Save, X, Upload } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
-import Cookies from "js-cookie"
 
 export default function ProfilePage() {
-  const { user, isLoading, refreshUser } = useAuth()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
-  const [authError, setAuthError] = useState<string | null>(null)
   const [editData, setEditData] = useState({
     bio: "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server.",
     profilePicture: "",
@@ -34,53 +30,38 @@ export default function ProfilePage() {
     profilePicture: "",
   })
 
-  // Check authentication on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      setMounted(true)
+    setMounted(true)
+  }, [])
 
-      // Double-check auth status
-      await refreshUser()
-
-      // Check for auth cookie directly
-      const authCookie = Cookies.get("minecraft_smp_auth")
-      const userData = localStorage.getItem("minecraft_smp_user")
-
-      console.log("Profile page auth check:", {
-        authCookie: !!authCookie,
-        userData: !!userData,
-        userState: !!user,
-      })
-
-      if (!authCookie || !userData) {
-        setAuthError("Your session has expired. Please log in again.")
-        setRedirecting(true)
-
-        // Delay redirect to show error message
-        setTimeout(() => {
-          router.push("/auth/login?redirect=/profile")
-        }, 2000)
-      } else {
-        setAuthChecked(true)
-      }
+  // Only redirect after we're mounted, not loading, and confirmed no user
+  useEffect(() => {
+    if (mounted && !isLoading && !user) {
+      console.log("No user found after loading complete, redirecting to login")
+      setRedirecting(true)
+      // Add a small delay to prevent immediate redirect
+      const timer = setTimeout(() => {
+        router.push("/auth/login?redirect=/profile")
+      }, 500)
+      return () => clearTimeout(timer)
     }
+  }, [mounted, isLoading, user, router])
 
-    checkAuth()
-  }, [refreshUser, router])
-
-  // Load profile data once authenticated
   useEffect(() => {
-    if (user && mounted && authChecked) {
+    if (user && mounted) {
+      // Try to load saved profile data from localStorage first
       const savedProfileKey = `profile_${user.username}`
+      const savedProfileData = localStorage.getItem(savedProfileKey)
 
-      try {
-        const savedProfileData = localStorage.getItem(savedProfileKey)
-
-        if (savedProfileData) {
+      if (savedProfileData) {
+        // Use saved data if it exists
+        try {
           const parsedData = JSON.parse(savedProfileData)
           setEditData(parsedData)
           setSavedData(parsedData)
-        } else {
+        } catch (error) {
+          console.error("Error parsing saved profile data:", error)
+          // Use default data if parsing fails
           const initialData = {
             bio: "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server.",
             profilePicture: user.profilePicture || "",
@@ -88,46 +69,34 @@ export default function ProfilePage() {
           setEditData(initialData)
           setSavedData(initialData)
         }
-      } catch (error) {
-        console.error("Error loading profile data:", error)
-        const fallbackData = {
-          bio: "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server.",
-          profilePicture: user.profilePicture || "",
+      } else {
+        // Only set initial demo data if no saved data exists
+        const initialBio =
+          "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server."
+        const initialProfilePicture = user.profilePicture || ""
+
+        const initialData = {
+          bio: initialBio,
+          profilePicture: initialProfilePicture,
         }
-        setEditData(fallbackData)
-        setSavedData(fallbackData)
+
+        setEditData(initialData)
+        setSavedData(initialData)
       }
     }
-  }, [user, mounted, authChecked])
+  }, [user, mounted])
 
-  // Redirect if not authenticated after loading
-  useEffect(() => {
-    if (mounted && !isLoading && !user && !redirecting) {
-      console.log("No user found after loading complete, redirecting to login")
-      setRedirecting(true)
-      const timer = setTimeout(() => {
-        router.push("/auth/login?redirect=/profile")
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [mounted, isLoading, user, router, redirecting])
+  const handleSave = () => {
+    // Save the edited data to state
+    setSavedData({
+      bio: editData.bio,
+      profilePicture: editData.profilePicture,
+    })
 
-  const handleSave = async () => {
-    if (isSaving) return
-
-    setIsSaving(true)
-
-    try {
-      // Simulate save delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      setSavedData({
-        bio: editData.bio,
-        profilePicture: editData.profilePicture,
-      })
-
-      if (user) {
-        const savedProfileKey = `profile_${user.username}`
+    // Persist to localStorage with user-specific key
+    if (user) {
+      const savedProfileKey = `profile_${user.username}`
+      try {
         localStorage.setItem(
           savedProfileKey,
           JSON.stringify({
@@ -135,74 +104,42 @@ export default function ProfilePage() {
             profilePicture: editData.profilePicture,
           }),
         )
+      } catch (error) {
+        console.error("Error saving profile data:", error)
       }
-
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated!",
-        variant: "default",
-      })
-
-      setIsEditing(false)
-    } catch (error) {
-      console.error("Error saving profile:", error)
-      toast({
-        title: "Save Failed",
-        description: "Failed to save profile. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSaving(false)
     }
+
+    toast({
+      title: "Profile Updated",
+      description: "Your profile has been successfully updated!",
+      variant: "default",
+    })
+
+    setIsEditing(false)
   }
 
   const handleCancel = () => {
+    // Reset to the saved data
     setEditData({
       bio: savedData.bio,
       profilePicture: savedData.profilePicture,
     })
+
     setIsEditing(false)
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select an image smaller than 5MB.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        toast({
-          title: "Invalid file type",
-          description: "Please select an image file.",
-          variant: "destructive",
-        })
-        return
-      }
-
       const reader = new FileReader()
       reader.onloadend = () => {
         setEditData({ ...editData, profilePicture: reader.result as string })
-      }
-      reader.onerror = () => {
-        toast({
-          title: "Upload failed",
-          description: "Failed to read the image file.",
-          variant: "destructive",
-        })
       }
       reader.readAsDataURL(file)
     }
   }
 
-  // Loading state
+  // Show loading while checking authentication or not mounted
   if (!mounted || isLoading) {
     return (
       <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
@@ -214,24 +151,7 @@ export default function ProfilePage() {
     )
   }
 
-  // Auth error state
-  if (authError) {
-    return (
-      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
-        <div className="flex flex-col items-center max-w-md w-full bg-gray-800 p-6 rounded-none minecraft-card">
-          <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-          <h2 className="text-xl font-bold mb-2 minecraft-text">Authentication Error</h2>
-          <p className="text-center minecraft-text mb-4">{authError}</p>
-          <p className="text-center text-gray-400 minecraft-text mb-6">Redirecting to login page...</p>
-          <div className="w-full bg-gray-700 h-2">
-            <div className="bg-red-500 h-2 animate-pulse-green" style={{ width: "100%" }}></div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Redirecting state
+  // Show redirecting message if we're redirecting
   if (redirecting || (!user && mounted && !isLoading)) {
     return (
       <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
@@ -243,50 +163,44 @@ export default function ProfilePage() {
     )
   }
 
-  // No user state
+  // Don't render the profile content if no user
   if (!user) {
     return null
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 sm:py-12">
-      <h1 className="text-4xl font-bold text-center mb-8 sm:mb-12 minecraft-title">Your Profile</h1>
+    <div className="container mx-auto px-4 py-12">
+      <h1 className="text-4xl font-bold text-center mb-12 minecraft-title">Your Profile</h1>
 
       <div className="max-w-4xl mx-auto">
-        <Card className="bg-gray-800 border-none minecraft-card animate-fade-in">
+        <Card className="bg-gray-800 border-none minecraft-card">
           <CardHeader>
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
                 <div className="relative w-32 h-32 rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
                   {isEditing && editData.profilePicture ? (
                     <Image
-                      src={editData.profilePicture || "/placeholder.svg?height=128&width=128"}
+                      src={editData.profilePicture || "/placeholder.svg"}
                       alt="Profile Picture"
                       fill
                       className="object-cover"
-                      onError={() => {
-                        setEditData({ ...editData, profilePicture: "" })
-                      }}
                     />
                   ) : savedData.profilePicture ? (
                     <Image
-                      src={savedData.profilePicture || "/placeholder.svg?height=128&width=128"}
+                      src={savedData.profilePicture || "/placeholder.svg"}
                       alt="Profile Picture"
                       fill
                       className="object-cover"
-                      onError={() => {
-                        setSavedData({ ...savedData, profilePicture: "" })
-                      }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-700 text-white font-bold text-2xl">
+                    <div className="w-full h-full flex items-center justify-center bg-gray-700 text-white font-bold">
                       {user.username?.substring(0, 2).toUpperCase() || "U"}
                     </div>
                   )}
                 </div>
                 {isEditing && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-none">
-                    <label htmlFor="profile-upload" className="cursor-pointer hover:opacity-80 transition-opacity">
+                    <label htmlFor="profile-upload" className="cursor-pointer">
                       <Upload className="h-8 w-8 text-white" />
                       <input
                         id="profile-upload"
@@ -294,7 +208,6 @@ export default function ProfilePage() {
                         accept="image/*"
                         onChange={handleImageUpload}
                         className="hidden"
-                        disabled={isSaving}
                       />
                     </label>
                   </div>
@@ -328,26 +241,11 @@ export default function ProfilePage() {
                     <Button
                       onClick={handleSave}
                       className="bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
-                      disabled={isSaving}
                     >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Save
-                        </>
-                      )}
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
                     </Button>
-                    <Button
-                      onClick={handleCancel}
-                      variant="outline"
-                      className="minecraft-button rounded-none"
-                      disabled={isSaving}
-                    >
+                    <Button onClick={handleCancel} variant="outline" className="minecraft-button rounded-none">
                       <X className="h-4 w-4 mr-2" />
                       Cancel
                     </Button>
@@ -368,16 +266,11 @@ export default function ProfilePage() {
                     className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500 rounded-none minecraft-border minecraft-text"
                     rows={4}
                     placeholder="Tell us about yourself..."
-                    maxLength={500}
-                    disabled={isSaving}
                   />
                 ) : (
-                  <p className="text-gray-300 bg-gray-700/50 p-4 minecraft-border border-2 border-gray-600 minecraft-text rounded-none">
+                  <p className="text-gray-300 bg-gray-700/50 p-4 minecraft-border border-2 border-gray-600 minecraft-text">
                     {savedData.bio}
                   </p>
-                )}
-                {isEditing && (
-                  <p className="text-xs text-gray-400 mt-1 minecraft-text">{editData.bio.length}/500 characters</p>
                 )}
               </div>
             </div>

@@ -145,8 +145,8 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8 sm:py-12">
-        <div className="bg-gray-800 rounded-none p-6 sm:p-8 max-w-md w-full text-center minecraft-card">
+      <div className="container mx-auto px-4 py-12 flex flex-col items-center">
+        <div className="bg-gray-800 rounded-none p-8 max-w-md w-full text-center minecraft-card">
           <div className="flex justify-center mb-6">
             <ShoppingCart className="h-16 w-16 text-gray-500" />
           </div>
@@ -165,7 +165,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 sm:py-12">
+    <div className="container mx-auto px-4 py-12">
       <h1 className="text-4xl font-bold text-center mb-6 minecraft-title">Your Cart</h1>
       <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto minecraft-text">
         Review your items and proceed to checkout to unlock your VIP benefits on our Minecraft server.
