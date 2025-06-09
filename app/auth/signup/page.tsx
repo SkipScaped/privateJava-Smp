@@ -83,7 +83,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
       <Card className="w-full max-w-md bg-gray-800 border-none minecraft-card rounded-none">
         <CardHeader className="items-center">
           <div className="w-16 h-16 mb-4 relative rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
