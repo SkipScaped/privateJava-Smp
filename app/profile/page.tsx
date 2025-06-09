@@ -20,6 +20,7 @@ export default function ProfilePage() {
   const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
   const [editData, setEditData] = useState({
     bio: "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server.",
     profilePicture: "",
@@ -33,11 +34,16 @@ export default function ProfilePage() {
     setMounted(true)
   }, [])
 
-  // Only redirect after we're mounted and not loading
+  // Only redirect after we're mounted, not loading, and confirmed no user
   useEffect(() => {
     if (mounted && !isLoading && !user) {
-      console.log("No user found, redirecting to login")
-      router.push("/auth/login?redirect=/profile")
+      console.log("No user found after loading complete, redirecting to login")
+      setRedirecting(true)
+      // Add a small delay to prevent immediate redirect
+      const timer = setTimeout(() => {
+        router.push("/auth/login?redirect=/profile")
+      }, 500)
+      return () => clearTimeout(timer)
     }
   }, [mounted, isLoading, user, router])
 
@@ -49,9 +55,20 @@ export default function ProfilePage() {
 
       if (savedProfileData) {
         // Use saved data if it exists
-        const parsedData = JSON.parse(savedProfileData)
-        setEditData(parsedData)
-        setSavedData(parsedData)
+        try {
+          const parsedData = JSON.parse(savedProfileData)
+          setEditData(parsedData)
+          setSavedData(parsedData)
+        } catch (error) {
+          console.error("Error parsing saved profile data:", error)
+          // Use default data if parsing fails
+          const initialData = {
+            bio: "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server.",
+            profilePicture: user.profilePicture || "",
+          }
+          setEditData(initialData)
+          setSavedData(initialData)
+        }
       } else {
         // Only set initial demo data if no saved data exists
         const initialBio =
@@ -79,13 +96,17 @@ export default function ProfilePage() {
     // Persist to localStorage with user-specific key
     if (user) {
       const savedProfileKey = `profile_${user.username}`
-      localStorage.setItem(
-        savedProfileKey,
-        JSON.stringify({
-          bio: editData.bio,
-          profilePicture: editData.profilePicture,
-        }),
-      )
+      try {
+        localStorage.setItem(
+          savedProfileKey,
+          JSON.stringify({
+            bio: editData.bio,
+            profilePicture: editData.profilePicture,
+          }),
+        )
+      } catch (error) {
+        console.error("Error saving profile data:", error)
+      }
     }
 
     toast({
@@ -130,8 +151,8 @@ export default function ProfilePage() {
     )
   }
 
-  // Don't render anything if no user (will redirect)
-  if (!user) {
+  // Show redirecting message if we're redirecting
+  if (redirecting || (!user && mounted && !isLoading)) {
     return (
       <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
         <div className="flex flex-col items-center">
@@ -140,6 +161,11 @@ export default function ProfilePage() {
         </div>
       </div>
     )
+  }
+
+  // Don't render the profile content if no user
+  if (!user) {
+    return null
   }
 
   return (

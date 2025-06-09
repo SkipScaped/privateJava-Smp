@@ -61,9 +61,10 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/40 z-10"></div>
         </div>
 
+        {/* Update the hero section to ensure proper responsive layout */}
         <div className="container mx-auto px-4 absolute inset-0 z-20 flex flex-col items-center justify-center text-center">
           {/* Logo */}
-          <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 mb-6 sm:mb-8 relative minecraft-border border-8 border-gray-600 bg-gray-800/80 p-4 rounded-none">
+          <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-4 sm:mb-6 relative minecraft-border border-8 border-gray-600 bg-gray-800/80 p-3 sm:p-4 rounded-none">
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-green-500 bg-white/10">
               <Image
                 src="/logo.png"
@@ -76,22 +77,22 @@ export default function Home() {
             </div>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold animate-text-gradient bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-300% bg-clip-text text-transparent mb-4 minecraft-title">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold animate-text-gradient bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-300% bg-clip-text text-transparent mb-3 sm:mb-4 minecraft-title">
             Private Java SMP
           </h1>
 
-          <p className="text-lg sm:text-xl text-gray-200 max-w-2xl mb-6 sm:mb-8 minecraft-text">
+          <p className="text-base sm:text-lg md:text-xl text-gray-200 max-w-2xl mb-4 sm:mb-6 minecraft-text px-2">
             Join our private Java SMP server and experience Minecraft like never before. Build, explore, and make new
             friends in our growing community!
           </p>
 
-          {/* Server IP Section */}
-          <div className="bg-gray-800/90 p-4 sm:p-6 rounded-none mb-6 sm:mb-8 minecraft-card border-4 border-gray-700 w-full max-w-md">
+          {/* Server IP Section - Make it more responsive */}
+          <div className="bg-gray-800/90 p-3 sm:p-4 md:p-6 rounded-none mb-4 sm:mb-6 minecraft-card border-4 border-gray-700 w-full max-w-md mx-2">
             <h3 className="text-lg font-bold mb-2 minecraft-text">Server IP</h3>
             <div className="flex items-center gap-2 bg-gray-700 p-2 sm:p-3 rounded-none minecraft-border border-2 border-gray-600">
               {mounted && user ? (
                 <>
-                  <code className="text-green-400 font-mono flex-1 minecraft-text text-sm sm:text-base overflow-auto">
+                  <code className="text-green-400 font-mono flex-1 minecraft-text text-xs sm:text-sm md:text-base overflow-auto">
                     {serverIP}
                   </code>
                   <Button
@@ -105,7 +106,7 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <code className="text-gray-500 font-mono flex-1 minecraft-text text-sm sm:text-base overflow-auto blur-sm select-none">
+                  <code className="text-gray-500 font-mono flex-1 minecraft-text text-xs sm:text-sm md:text-base overflow-auto blur-sm select-none">
                     ••••••••••••••••••••••••
                   </code>
                   <Button
@@ -118,46 +119,47 @@ export default function Home() {
                 </>
               )}
             </div>
-            <p className="text-xs sm:text-sm text-gray-400 mt-2 minecraft-text">
+            <p className="text-xs text-gray-400 mt-2 minecraft-text">
               {mounted && user
                 ? "Click the button to copy the server IP"
                 : "You need to login to view and copy the server IP"}
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/shop">
-              <Button size="lg" className="bg-green-700 hover:bg-green-800 minecraft-button rounded-none">
+          {/* Make buttons more responsive */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md px-2">
+            <Link href="/shop" className="w-full">
+              <Button size="lg" className="w-full bg-green-700 hover:bg-green-800 minecraft-button rounded-none">
                 Get VIP Access
               </Button>
             </Link>
             {mounted && !user ? (
-              <Link href="/auth/signup">
+              <Link href="/auth/signup" className="w-full">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white/20 hover:bg-white/10 minecraft-button rounded-none"
+                  className="w-full border-white/20 hover:bg-white/10 minecraft-button rounded-none"
                 >
                   Sign Up Now
                 </Button>
               </Link>
             ) : (
-              <div className="flex gap-4">
-                <Link href="/profile">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
+                <Link href="/profile" className="w-full">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white/20 hover:bg-white/10 minecraft-button rounded-none"
+                    className="w-full border-white/20 hover:bg-white/10 minecraft-button rounded-none"
                   >
                     View Profile
                   </Button>
                 </Link>
                 {mounted && cartCount > 0 && (
-                  <Link href="/cart">
+                  <Link href="/cart" className="w-full">
                     <Button
                       size="lg"
                       variant="outline"
-                      className="border-orange-500 text-orange-400 hover:bg-orange-500/10 minecraft-button rounded-none relative"
+                      className="w-full border-orange-500 text-orange-400 hover:bg-orange-500/10 minecraft-button rounded-none relative"
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
                       Cart ({cartCount})

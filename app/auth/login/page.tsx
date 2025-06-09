@@ -34,9 +34,13 @@ export default function LoginPage() {
     if (mounted && user) {
       const redirect = searchParams.get("redirect")
       const targetUrl = redirect || "/"
-      console.log("User already logged in, redirecting to:", targetUrl)
-      router.push(targetUrl)
-      return
+
+      // Add a delay to ensure state is fully updated
+      const timer = setTimeout(() => {
+        router.push(targetUrl)
+      }, 100)
+
+      return () => clearTimeout(timer)
     }
 
     const registered = searchParams.get("registered")
@@ -61,28 +65,24 @@ export default function LoginPage() {
     setError(null)
     setSuccess(null)
 
-    console.log("Login attempt:", formData.username)
-
     if (!formData.username.trim() || !formData.password.trim()) {
       setError("Please enter both username and password")
       return
     }
 
     const loginSuccess = await login(formData.username, formData.password)
-    console.log("Login result:", loginSuccess)
 
     if (loginSuccess) {
       // Get redirect path and navigate
       const redirect = searchParams.get("redirect")
       const targetUrl = redirect || "/"
-      console.log("Login successful, redirecting to:", targetUrl)
 
-      // Small delay to ensure state is updated
+      // Add a delay to ensure state is updated before redirect
       setTimeout(() => {
         router.push(targetUrl)
-      }, 100)
+      }, 300)
     } else {
-      setError("Incorrect password or username")
+      setError("Login failed. Please try again.")
     }
   }
 

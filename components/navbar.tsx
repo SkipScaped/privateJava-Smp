@@ -11,14 +11,23 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 
 export default function Navbar() {
+  // Fix the responsive mode in the navbar
+
+  // Update the mobile menu to ensure it works properly
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { cartItems } = useCart()
   const { user, logout } = useAuth()
 
+  // Ensure mounted state is properly set
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Add a function to close the menu when clicking a link
+  const closeMenu = () => {
+    setIsMenuOpen(false)
+  }
 
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0)
 
@@ -130,69 +139,73 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-3 bg-gray-800 rounded-none border-2 minecraft-border border-gray-700 shadow-lg">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
-            ))}
-
-            <div className="border-t-2 border-gray-700 my-2"></div>
-
-            {mounted && user ? (
-              <>
-                <div className="px-4 py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-none overflow-hidden minecraft-border border-2 border-gray-700">
-                      <SafeImage
-                        src={user.profilePicture}
-                        alt={user.username || "User"}
-                        fill
-                        className="object-cover"
-                        fallbackText={user.username?.substring(0, 2).toUpperCase() || "U"}
-                      />
-                    </div>
-                    <div>
-                      <p className="font-medium minecraft-text">{user.username}</p>
-                    </div>
-                  </div>
-                </div>
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <User className="h-5 w-5" />
-                  View Profile
-                </Link>
-                <button
-                  className="flex items-center gap-2 w-full text-left py-3 px-4 text-red-400 hover:bg-red-900/20 minecraft-text"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-5 w-5" />
-                  Logout
-                </button>
-              </>
-            ) : (
-              mounted && (
-                <div className="flex flex-col gap-2 p-4">
-                  <Link href="/auth/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="outline" className="w-full minecraft-button">
-                      Login
-                    </Button>
+          <div className="md:hidden fixed top-[72px] left-0 right-0 bg-gray-800 border-b-4 border-green-800 minecraft-border z-40 shadow-lg">
+            <div className="container mx-auto px-4">
+              <div className="py-3">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
+                    onClick={closeMenu}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.name}
                   </Link>
-                  <Link href="/auth/signup" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Button className="w-full bg-green-700 hover:bg-green-800 minecraft-button">Sign Up</Button>
-                  </Link>
-                </div>
-              )
-            )}
+                ))}
+
+                <div className="border-t-2 border-gray-700 my-2"></div>
+
+                {mounted && user ? (
+                  <>
+                    <div className="px-4 py-2">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-10 h-10 rounded-none overflow-hidden minecraft-border border-2 border-gray-700">
+                          <SafeImage
+                            src={user.profilePicture}
+                            alt={user.username || "User"}
+                            fill
+                            className="object-cover"
+                            fallbackText={user.username?.substring(0, 2).toUpperCase() || "U"}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-medium minecraft-text">{user.username}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
+                      onClick={closeMenu}
+                    >
+                      <User className="h-5 w-5" />
+                      View Profile
+                    </Link>
+                    <button
+                      className="flex items-center gap-2 w-full text-left py-3 px-4 text-red-400 hover:bg-red-900/20 minecraft-text"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  mounted && (
+                    <div className="flex flex-col gap-2 p-4">
+                      <Link href="/auth/login" className="w-full" onClick={closeMenu}>
+                        <Button variant="outline" className="w-full minecraft-button">
+                          Login
+                        </Button>
+                      </Link>
+                      <Link href="/auth/signup" className="w-full" onClick={closeMenu}>
+                        <Button className="w-full bg-green-700 hover:bg-green-800 minecraft-button">Sign Up</Button>
+                      </Link>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

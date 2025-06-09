@@ -35,21 +35,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const savedUser = localStorage.getItem("minecraft_smp_user")
         if (savedUser) {
-          const userData = JSON.parse(savedUser)
-          setUser(userData)
+          try {
+            const userData = JSON.parse(savedUser)
+            if (userData && userData.username) {
+              setUser(userData)
+            } else {
+              // Invalid user data
+              localStorage.removeItem("minecraft_smp_user")
+            }
+          } catch (e) {
+            // Invalid JSON
+            console.error("Invalid user data in localStorage:", e)
+            localStorage.removeItem("minecraft_smp_user")
+          }
         }
       } catch (error) {
         console.error("Error checking session:", error)
-        localStorage.removeItem("minecraft_smp_user")
+        // Clear potentially corrupted data
+        try {
+          localStorage.removeItem("minecraft_smp_user")
+        } catch (e) {
+          console.error("Error removing item from localStorage:", e)
+        }
       } finally {
         setIsLoading(false)
       }
     }
 
-    // Small delay to ensure localStorage is available
-    setTimeout(checkSession, 100)
+    // Check immediately and also after a small delay to ensure localStorage is available
+    checkSession()
+    const timer = setTimeout(checkSession, 100)
+    return () => clearTimeout(timer)
   }, [])
 
+  // Update the login function to properly handle the login state
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true)
@@ -64,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      // Create user data - accept ANY username/password
+      // Create user data - accept ANY username/password for demo purposes
       const userData = {
         id: Date.now(),
         username: username.trim(),
@@ -72,8 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profilePicture: undefined,
       }
 
-      // Save to localStorage
+      // Save to localStorage - ensure this happens synchronously
       localStorage.setItem("minecraft_smp_user", JSON.stringify(userData))
+
+      // Update state
       setUser(userData)
 
       toast({
