@@ -95,7 +95,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md bg-gray-800 border-none minecraft-card rounded-none">
         <CardHeader className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 relative rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
@@ -117,7 +117,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-red-500/20 border-2 border-red-500 rounded-none p-3 flex items-start minecraft-border">
+              <div className="bg-red-500/20 border-2 border-red-500 rounded-none p-3 flex items-start minecraft-border animate-pulse-green">
                 <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-200 minecraft-text">{error}</p>
               </div>

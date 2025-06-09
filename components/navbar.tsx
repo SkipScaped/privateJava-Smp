@@ -3,10 +3,9 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Menu, X, User, LogOut, Home, Package, Book } from "lucide-react"
+import { ShoppingCart, Menu, X, LogOut, Home, Package, Book } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useAuth } from "@/context/auth-context"
-import SafeImage from "@/components/safe-image"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 
@@ -47,7 +46,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2">
-            <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-none overflow-hidden minecraft-border border-2 border-gray-700">
+            <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-none overflow-hidden minecraft-border border-2 border-gray-700 hover:border-green-500 transition-colors">
               <Image src="/logo.png" alt="Private Java SMP Logo" width={40} height={40} className="object-contain" />
             </div>
             <span className="text-lg sm:text-xl font-bold text-white minecraft-text">Private Java SMP</span>
@@ -59,7 +58,7 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors minecraft-text"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-green-400 transition-all duration-200 minecraft-text hover:transform hover:scale-105"
               >
                 <item.icon className="h-4 w-4" />
                 {item.name}
@@ -67,25 +66,15 @@ export default function Navbar() {
             ))}
 
             {mounted && user ? (
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors minecraft-text"
-                >
-                  <User className="h-4 w-4" />
-                  Profile
-                </Link>
-
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="minecraft-button bg-red-700 hover:bg-red-800"
-                >
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Logout
-                </Button>
-              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleLogout}
+                className="minecraft-button bg-red-700 hover:bg-red-800"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                Logout
+              </Button>
             ) : (
               mounted && (
                 <div className="flex items-center gap-2">
@@ -139,7 +128,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden fixed top-[72px] left-0 right-0 bg-gray-800 border-b-4 border-green-800 minecraft-border z-40 shadow-lg">
+          <div className="md:hidden fixed top-[72px] left-0 right-0 bg-gray-800 border-b-4 border-green-800 minecraft-border z-40 shadow-xl animate-in slide-in-from-top duration-200">
             <div className="container mx-auto px-4">
               <div className="py-3">
                 {navItems.map((item) => (
@@ -157,39 +146,13 @@ export default function Navbar() {
                 <div className="border-t-2 border-gray-700 my-2"></div>
 
                 {mounted && user ? (
-                  <>
-                    <div className="px-4 py-2">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-none overflow-hidden minecraft-border border-2 border-gray-700">
-                          <SafeImage
-                            src={user.profilePicture}
-                            alt={user.username || "User"}
-                            fill
-                            className="object-cover"
-                            fallbackText={user.username?.substring(0, 2).toUpperCase() || "U"}
-                          />
-                        </div>
-                        <div>
-                          <p className="font-medium minecraft-text">{user.username}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <Link
-                      href="/profile"
-                      className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
-                      onClick={closeMenu}
-                    >
-                      <User className="h-5 w-5" />
-                      View Profile
-                    </Link>
-                    <button
-                      className="flex items-center gap-2 w-full text-left py-3 px-4 text-red-400 hover:bg-red-900/20 minecraft-text"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="h-5 w-5" />
-                      Logout
-                    </button>
-                  </>
+                  <button
+                    className="flex items-center gap-2 w-full text-left py-3 px-4 text-red-400 hover:bg-red-900/20 minecraft-text"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-5 w-5" />
+                    Logout
+                  </button>
                 ) : (
                   mounted && (
                     <div className="flex flex-col gap-2 p-4">
