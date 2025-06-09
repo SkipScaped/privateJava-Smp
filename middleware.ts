@@ -11,18 +11,19 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
 
   if (isProtectedRoute) {
-    // Get the session ID from cookies
-    const sessionId = request.cookies.get("sessionId")?.value
+    // Get the auth cookie
+    const authCookie = request.cookies.get("minecraft_smp_auth")?.value
 
-    // If no session ID, redirect to login
-    if (!sessionId) {
+    // If no auth cookie, redirect to login
+    if (!authCookie) {
+      console.log("Middleware: No auth cookie found, redirecting to login")
       const url = new URL("/auth/login", request.url)
       url.searchParams.set("redirect", pathname)
       return NextResponse.redirect(url)
     }
 
-    // In a real app, you would verify the session with Redis here
-    // For now, we'll just check if the session ID exists
+    // Auth cookie exists, allow access
+    console.log("Middleware: Auth cookie found, allowing access")
   }
 
   return NextResponse.next()

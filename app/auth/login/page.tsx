@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import SafeImage from "@/components/safe-image"
+import Cookies from "js-cookie"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -22,20 +23,39 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, isLoading, user } = useAuth()
+  const { login, isLoading, user, refreshUser } = useAuth()
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    const initPage = async () => {
+      setMounted(true)
+
+      // Force refresh auth state on page load
+      await refreshUser()
+
+      // Check if already logged in via cookie
+      const authCookie = Cookies.get("minecraft_smp_auth")
+      const userData = localStorage.getItem("minecraft_smp_user")
+
+      console.log("Login page auth check:", {
+        authCookie: !!authCookie,
+        userData: !!userData,
+        userState: !!user,
+      })
+    }
+
+    initPage()
+  }, [refreshUser])
 
   useEffect(() => {
     if (mounted && user) {
       const redirect = searchParams.get("redirect")
       const targetUrl = redirect || "/"
 
-      // Add a delay to ensure state is fully updated
+      console.log("User already logged in, redirecting to:", targetUrl)
+
       const timer = setTimeout(() => {
         router.push(targetUrl)
       }, 100)
@@ -62,41 +82,58 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (isSubmitting || isLoading) return
+
     setError(null)
     setSuccess(null)
+    setIsSubmitting(true)
 
-    if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Please enter both username and password")
-      return
-    }
+    try {
+      if (!formData.username.trim() || !formData.password.trim()) {
+        setError("Please enter both username and password")
+        setIsSubmitting(false)
+        return
+      }
 
-    const loginSuccess = await login(formData.username, formData.password)
+      console.log("Attempting login with:", formData.username)
+      const loginSuccess = await login(formData.username, formData.password)
 
-    if (loginSuccess) {
-      // Get redirect path and navigate
-      const redirect = searchParams.get("redirect")
-      const targetUrl = redirect || "/"
+      if (loginSuccess) {
+        const redirect = searchParams.get("redirect")
+        const targetUrl = redirect || "/"
 
-      // Add a delay to ensure state is updated before redirect
-      setTimeout(() => {
-        router.push(targetUrl)
-      }, 300)
-    } else {
-      setError("Login failed. Please try again.")
+        console.log("Login successful, redirecting to:", targetUrl)
+
+        // Set success message
+        setSuccess("Login successful! Redirecting...")
+
+        // Add a delay to ensure auth state is fully updated
+        setTimeout(() => {
+          router.push(targetUrl)
+        }, 500)
+      } else {
+        setError("Login failed. Please try again.")
+      }
+    } catch (err) {
+      console.error("Login error:", err)
+      setError("An unexpected error occurred. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-white minecraft-text">Loading...</div>
+        <div className="loading-skeleton w-32 h-8 rounded"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <Card className="w-full max-w-md bg-gray-800 border-none minecraft-card rounded-none">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 py-8">
+      <Card className="w-full max-w-md bg-gray-800 border-none minecraft-card rounded-none animate-fade-in">
         <CardHeader className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 relative rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
             <SafeImage
@@ -117,14 +154,14 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-red-500/20 border-2 border-red-500 rounded-none p-3 flex items-start minecraft-border">
+              <div className="error-state rounded-none p-3 flex items-start minecraft-border">
                 <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-200 minecraft-text">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="bg-green-500/20 border-2 border-green-500 rounded-none p-3 flex items-start minecraft-border">
+              <div className="success-state rounded-none p-3 flex items-start minecraft-border">
                 <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-green-200 minecraft-text">{success}</p>
               </div>
@@ -142,7 +179,8 @@ export default function LoginPage() {
                 onChange={handleChange}
                 required
                 className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500 rounded-none minecraft-border minecraft-text"
-                disabled={isLoading}
+                disabled={isSubmitting || isLoading}
+                autoComplete="username"
               />
             </div>
 
@@ -160,13 +198,15 @@ export default function LoginPage() {
                   onChange={handleChange}
                   required
                   className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500 pr-10 rounded-none minecraft-border minecraft-text"
-                  disabled={isLoading}
+                  disabled={isSubmitting || isLoading}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white minecraft-button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
+                  disabled={isSubmitting || isLoading}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -179,7 +219,7 @@ export default function LoginPage() {
                 name="remember-me"
                 type="checkbox"
                 className="h-4 w-4 border-gray-600 bg-gray-700 text-green-600 focus:ring-green-500 minecraft-border"
-                disabled={isLoading}
+                disabled={isSubmitting || isLoading}
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300 minecraft-text">
                 Remember me
@@ -191,9 +231,9 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full bg-green-600 hover:bg-green-700 text-white minecraft-button rounded-none"
-              disabled={isLoading}
+              disabled={isSubmitting || isLoading}
             >
-              {isLoading ? (
+              {isSubmitting || isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Logging in...

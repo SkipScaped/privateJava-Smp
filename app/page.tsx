@@ -62,7 +62,7 @@ export default function Home() {
         </div>
 
         {/* Update the hero section to ensure proper responsive layout */}
-        <div className="container mx-auto px-4 absolute inset-0 z-20 flex flex-col items-center justify-center text-center">
+        <div className="container mx-auto px-4 absolute inset-0 z-20 flex flex-col items-center justify-center text-center py-8">
           {/* Logo */}
           <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-4 sm:mb-6 relative minecraft-border border-8 border-gray-600 bg-gray-800/80 p-3 sm:p-4 rounded-none">
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-green-500 bg-white/10">
@@ -87,7 +87,7 @@ export default function Home() {
           </p>
 
           {/* Server IP Section - Make it more responsive */}
-          <div className="bg-gray-800/90 p-3 sm:p-4 md:p-6 rounded-none mb-4 sm:mb-6 minecraft-card border-4 border-gray-700 w-full max-w-md mx-2">
+          <div className="bg-gray-800/90 p-3 sm:p-4 md:p-6 rounded-none mb-4 sm:mb-6 minecraft-card border-4 border-gray-700 w-full max-w-lg mx-2">
             <h3 className="text-lg font-bold mb-2 minecraft-text">Server IP</h3>
             <div className="flex items-center gap-2 bg-gray-700 p-2 sm:p-3 rounded-none minecraft-border border-2 border-gray-600">
               {mounted && user ? (
@@ -173,7 +173,7 @@ export default function Home() {
       </div>
 
       {/* Features Section */}
-      <div className="container mx-auto px-4 py-16 sm:py-24">
+      <div className="container mx-auto px-4 py-12 sm:py-16 md:py-20">
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 minecraft-title">Why Join Our Server?</h2>
           <p className="text-gray-400 max-w-2xl mx-auto minecraft-text">
@@ -216,7 +216,7 @@ export default function Home() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-gradient-to-r from-green-900 to-blue-900 py-12 sm:py-16">
+      <div className="bg-gradient-to-r from-green-900 to-blue-900 py-8 sm:py-12 md:py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 minecraft-title">Ready to Join?</h2>
           <p className="text-lg sm:text-xl text-gray-200 mb-6 sm:mb-8 max-w-2xl mx-auto minecraft-text">

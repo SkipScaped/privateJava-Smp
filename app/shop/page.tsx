@@ -85,13 +85,13 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8 sm:py-12">
       <h1 className="text-4xl font-bold text-center mb-6 minecraft-title">VIP Packages</h1>
       <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto minecraft-text">
         Enhance your Minecraft experience with our VIP packages. Unlock exclusive perks, discounts, and features!
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
         {vipProducts.map((product) => (
           <Card
             key={product.id}
@@ -190,7 +190,7 @@ export default function ShopPage() {
         ))}
       </div>
 
-      <div className="mt-16 bg-gray-800 rounded-none p-8 max-w-3xl mx-auto minecraft-card">
+      <div className="mt-12 sm:mt-16 bg-gray-800 rounded-none p-6 sm:p-8 max-w-4xl mx-auto minecraft-card">
         <h2 className="text-2xl font-bold mb-4 text-center minecraft-text">Why Choose VIP?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <div className="flex flex-col items-center text-center">
