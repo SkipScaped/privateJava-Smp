@@ -10,8 +10,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { uploadImage } from "@/lib/blob"
 import { ImagePlus, Loader2, RefreshCw } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/context/auth-context"
+import { supabase } from "@/lib/supabase"
+import Link from "next/link"
 
-export default function GalleryUpload({ userId }: { userId: number }) {
+export default function GalleryUpload() {
+  const { user } = useAuth()
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -30,7 +34,7 @@ export default function GalleryUpload({ userId }: { userId: number }) {
     const maxSize = 5 * 1024 * 1024 // 5MB
 
     if (!validTypes.includes(selectedFile.type)) {
-      setError("Please select a valid image file (JPEG, PNG, GIF)")
+      setError("Please select a valid image file (JPEG, PNG, GIF, WEBP)")
       return
     }
 
@@ -53,6 +57,24 @@ export default function GalleryUpload({ userId }: { userId: number }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to upload images.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!user.emailConfirmed) {
+      toast({
+        title: "Email confirmation required",
+        description: "Please confirm your email before uploading images.",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!file || !title) {
       setError("Please provide a title and image")
       return
@@ -68,45 +90,41 @@ export default function GalleryUpload({ userId }: { userId: number }) {
       // Upload to Blob storage
       const imageUrl = await uploadImage(file, filename)
 
-      // Save to database
-      const response = await fetch("/api/gallery", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          title,
-          description,
-          image_url: imageUrl,
-        }),
+      // Save to Supabase database
+      const { error: dbError } = await supabase.from("gallery").insert({
+        user_id: user.id,
+        title,
+        description,
+        image_url: imageUrl,
       })
 
-      const data = await response.json()
-
-      if (data.success) {
-        setSuccess(true)
-        setTitle("")
-        setDescription("")
-        setFile(null)
-        setPreview(null)
-
-        toast({
-          title: "Image uploaded successfully!",
-          description: "Your image has been added to the gallery.",
-          variant: "default",
-        })
-
-        // Reset success message after 3 seconds
-        setTimeout(() => setSuccess(false), 3000)
-      } else {
-        setError(data.message || "Failed to upload image")
+      if (dbError) {
+        console.error("Database error:", dbError)
         toast({
           title: "Upload failed",
-          description: data.message || "There was a problem uploading your image.",
+          description: "Failed to save image to database. Please try again.",
           variant: "destructive",
         })
+        return
       }
+
+      setSuccess(true)
+      setTitle("")
+      setDescription("")
+      setFile(null)
+      setPreview(null)
+
+      toast({
+        title: "Image uploaded successfully!",
+        description: "Your image has been added to the gallery.",
+        variant: "default",
+      })
+
+      // Reset success message after 3 seconds
+      setTimeout(() => setSuccess(false), 3000)
+
+      // Refresh the page to show the new image
+      window.location.reload()
     } catch (err) {
       setError("Error uploading image")
       console.error(err)
@@ -128,55 +146,87 @@ export default function GalleryUpload({ userId }: { userId: number }) {
     setError(null)
   }
 
+  if (!user) {
+    return (
+      <Card className="bg-gray-800 border-none minecraft-card rounded-none">
+        <CardContent className="p-6 text-center">
+          <h3 className="text-lg font-medium mb-2 minecraft-text">Want to share your builds?</h3>
+          <p className="text-gray-400 mb-4 minecraft-text">Please log in to upload images to the gallery.</p>
+          <Link href="/auth/login?redirect=/gallery">
+            <Button className="bg-green-600 hover:bg-green-700 minecraft-button rounded-none">Login to Upload</Button>
+          </Link>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!user.emailConfirmed) {
+    return (
+      <Card className="bg-gray-800 border-none minecraft-card rounded-none">
+        <CardContent className="p-6 text-center">
+          <h3 className="text-lg font-medium mb-2 minecraft-text">Email Confirmation Required</h3>
+          <p className="text-gray-400 mb-4 minecraft-text">
+            Please confirm your email address before uploading images.
+          </p>
+          <Link href="/auth/login">
+            <Button className="bg-yellow-600 hover:bg-yellow-700 minecraft-button rounded-none">Confirm Email</Button>
+          </Link>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-gray-800 border-none minecraft-card rounded-none">
       <CardHeader>
-        <CardTitle>Share Your Minecraft Creation</CardTitle>
+        <CardTitle className="minecraft-text">Share Your Minecraft Creation</CardTitle>
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className="minecraft-text">
+              Title
+            </Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter a title for your image"
-              className="bg-gray-700 border-gray-600"
+              className="bg-gray-700 border-gray-600 rounded-none minecraft-border minecraft-text"
               disabled={uploading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description" className="minecraft-text">
+              Description (optional)
+            </Label>
             <Input
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe your creation"
-              className="bg-gray-700 border-gray-600"
+              className="bg-gray-700 border-gray-600 rounded-none minecraft-border minecraft-text"
               disabled={uploading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image">Image</Label>
-            <div className="flex items-center justify-center border-2 border-dashed border-gray-600 rounded-md p-4 hover:border-gray-500 transition-colors">
+            <Label htmlFor="image" className="minecraft-text">
+              Image
+            </Label>
+            <div className="flex items-center justify-center border-2 border-dashed border-gray-600 rounded-none p-4 hover:border-gray-500 transition-colors minecraft-border">
               <label htmlFor="image" className="cursor-pointer w-full">
                 {preview ? (
                   <div className="relative w-full h-48">
-                    <img
-                      src={preview ? preview : "/placeholder.svg?height=200&width=200&text=Preview"}
-                      alt="Preview"
-                      className="w-full h-full object-contain"
-                    />
+                    <img src={preview || "/placeholder.svg"} alt="Preview" className="w-full h-full object-contain" />
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-4">
                     <ImagePlus className="h-10 w-10 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-400">Click to upload an image</p>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG or GIF up to 5MB</p>
+                    <p className="text-sm text-gray-400 minecraft-text">Click to upload an image</p>
+                    <p className="text-xs text-gray-500 mt-1 minecraft-text">PNG, JPG, GIF, or WEBP up to 5MB</p>
                   </div>
                 )}
                 <input
@@ -191,10 +241,14 @@ export default function GalleryUpload({ userId }: { userId: number }) {
             </div>
           </div>
 
-          {error && <div className="bg-red-500/20 border border-red-500 rounded-md p-3 text-sm">{error}</div>}
+          {error && (
+            <div className="bg-red-500/20 border-2 border-red-500 rounded-none p-3 text-sm minecraft-border minecraft-text">
+              {error}
+            </div>
+          )}
 
           {success && (
-            <div className="bg-green-500/20 border border-green-500 rounded-md p-3 text-sm">
+            <div className="bg-green-500/20 border-2 border-green-500 rounded-none p-3 text-sm minecraft-border minecraft-text">
               Image uploaded successfully!
             </div>
           )}
@@ -202,12 +256,22 @@ export default function GalleryUpload({ userId }: { userId: number }) {
 
         <CardFooter className="flex gap-2">
           {file && (
-            <Button type="button" variant="outline" onClick={resetForm} disabled={uploading} className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={resetForm}
+              disabled={uploading}
+              className="flex-1 minecraft-button rounded-none bg-transparent"
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
               Reset
             </Button>
           )}
-          <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700" disabled={uploading || !file}>
+          <Button
+            type="submit"
+            className="flex-1 bg-green-600 hover:bg-green-700 minecraft-button rounded-none"
+            disabled={uploading || !file}
+          >
             {uploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

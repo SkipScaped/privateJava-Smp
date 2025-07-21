@@ -24,6 +24,7 @@ type AuthContextType = {
   logout: () => void
   refreshUser: () => Promise<void>
   resendConfirmation: (email: string) => Promise<boolean>
+  updateProfile: (data: { username?: string; bio?: string; profilePicture?: string }) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -294,6 +295,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateProfile = async (data: {
+    username?: string
+    bio?: string
+    profilePicture?: string
+  }): Promise<boolean> => {
+    try {
+      if (!user) return false
+
+      // Check if username is taken by another user
+      if (data.username && data.username !== user.username) {
+        const { data: existingUser } = await supabase
+          .from("users")
+          .select("id")
+          .eq("username", data.username)
+          .neq("id", user.id)
+          .single()
+
+        if (existingUser) {
+          toast({
+            title: "Username taken",
+            description: "This username is already taken. Please choose a different one.",
+            variant: "destructive",
+          })
+          return false
+        }
+      }
+
+      // Update user profile in Supabase
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+      }
+
+      if (data.username !== undefined) updateData.username = data.username
+      if (data.bio !== undefined) updateData.bio = data.bio
+      if (data.profilePicture !== undefined) updateData.profile_picture_url = data.profilePicture
+
+      const { error } = await supabase.from("users").update(updateData).eq("id", user.id)
+
+      if (error) {
+        console.error("Error updating profile:", error)
+        toast({
+          title: "Save Failed",
+          description: "Failed to save profile. Please try again.",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      // Refresh user data
+      await refreshUser()
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated!",
+        variant: "default",
+      })
+
+      return true
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      toast({
+        title: "Save Failed",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive",
+      })
+      return false
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -304,6 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         refreshUser,
         resendConfirmation,
+        updateProfile,
       }}
     >
       {children}

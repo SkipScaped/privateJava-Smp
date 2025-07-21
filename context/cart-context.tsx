@@ -15,7 +15,7 @@ export type CartItem = VipProduct & {
 }
 
 type CartContextType = {
-  cartItems: CartItem[]
+  items: CartItem[]
   addToCart: (product: VipProduct) => void
   removeFromCart: (productId: string) => void
   clearCart: () => void
@@ -29,7 +29,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 const CART_STORAGE_KEY = "minecraft_smp_cart"
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [items, setItems] = useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
   // Load cart from localStorage on mount
@@ -38,7 +38,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY)
       if (savedCart) {
         const parsedCart = JSON.parse(savedCart)
-        setCartItems(parsedCart)
+        setItems(parsedCart)
       }
     } catch (error) {
       console.error("Error loading cart from localStorage:", error)
@@ -47,19 +47,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Save cart to localStorage whenever cartItems changes
+  // Save cart to localStorage whenever items changes
   useEffect(() => {
     if (isLoaded) {
       try {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
       } catch (error) {
         console.error("Error saving cart to localStorage:", error)
       }
     }
-  }, [cartItems, isLoaded])
+  }, [items, isLoaded])
 
   const addToCart = (product: VipProduct) => {
-    setCartItems((prevItems) => {
+    setItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id)
 
       if (existingItem) {
@@ -71,7 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const removeFromCart = (productId: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== productId))
+    setItems((prevItems) => prevItems.filter((item) => item.id !== productId))
   }
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -80,25 +80,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    setCartItems((prevItems) => prevItems.map((item) => (item.id === productId ? { ...item, quantity } : item)))
+    setItems((prevItems) => prevItems.map((item) => (item.id === productId ? { ...item, quantity } : item)))
   }
 
   const clearCart = () => {
-    setCartItems([])
+    setItems([])
   }
 
   const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+    return items.reduce((total, item) => total + item.price * item.quantity, 0)
   }
 
   const getCartCount = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0)
+    return items.reduce((total, item) => total + item.quantity, 0)
   }
 
   return (
     <CartContext.Provider
       value={{
-        cartItems,
+        items,
         addToCart,
         removeFromCart,
         clearCart,

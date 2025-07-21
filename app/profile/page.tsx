@@ -8,17 +8,16 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Loader2, Calendar, Edit, Save, X, Upload, AlertCircle } from "lucide-react"
+import { Loader2, Calendar, Edit, Save, X, Upload, AlertCircle, User, Mail } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase"
 import { uploadImage } from "@/lib/blob"
 import Image from "next/image"
 
 export default function ProfilePage() {
-  const { user, isLoading, refreshUser } = useAuth()
+  const { user, isLoading, updateProfile } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
@@ -56,68 +55,17 @@ export default function ProfilePage() {
 
     setIsSaving(true)
 
-    try {
-      // Check if username is taken by another user
-      if (editData.username !== user.username) {
-        const { data: existingUser } = await supabase
-          .from("users")
-          .select("id")
-          .eq("username", editData.username)
-          .neq("id", user.id)
-          .single()
+    const success = await updateProfile({
+      username: editData.username,
+      bio: editData.bio,
+      profilePicture: editData.profilePicture,
+    })
 
-        if (existingUser) {
-          toast({
-            title: "Username taken",
-            description: "This username is already taken. Please choose a different one.",
-            variant: "destructive",
-          })
-          setIsSaving(false)
-          return
-        }
-      }
-
-      // Update user profile in Supabase
-      const { error } = await supabase
-        .from("users")
-        .update({
-          username: editData.username,
-          bio: editData.bio,
-          profile_picture_url: editData.profilePicture,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id)
-
-      if (error) {
-        console.error("Error updating profile:", error)
-        toast({
-          title: "Save Failed",
-          description: "Failed to save profile. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      // Refresh user data
-      await refreshUser()
-
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated!",
-        variant: "default",
-      })
-
+    if (success) {
       setIsEditing(false)
-    } catch (error) {
-      console.error("Error saving profile:", error)
-      toast({
-        title: "Save Failed",
-        description: "Failed to save profile. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSaving(false)
     }
+
+    setIsSaving(false)
   }
 
   const handleCancel = () => {
@@ -237,8 +185,9 @@ export default function ProfilePage() {
     <div className="container mx-auto px-4 py-8 sm:py-12">
       <h1 className="text-4xl font-bold text-center mb-8 sm:mb-12 minecraft-title">Your Profile</h1>
 
-      <div className="max-w-4xl mx-auto">
-        <Card className="bg-gray-800 border-none minecraft-card animate-fade-in">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Profile Information Card */}
+        <Card className="bg-gray-800 border-none minecraft-card">
           <CardHeader>
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
@@ -282,7 +231,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="text-center md:text-left flex-1">
-                <div className="flex flex-col md:flex-row items-center gap-2 mb-1">
+                <div className="flex flex-col md:flex-row items-center gap-2 mb-2">
                   <CardTitle className="text-2xl minecraft-text">
                     {isEditing ? (
                       <Input
@@ -290,6 +239,7 @@ export default function ProfilePage() {
                         onChange={(e) => setEditData({ ...editData, username: e.target.value })}
                         className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500 rounded-none minecraft-border minecraft-text text-2xl font-bold"
                         disabled={isSaving}
+                        placeholder="Username"
                       />
                     ) : (
                       user.username
@@ -299,7 +249,10 @@ export default function ProfilePage() {
                     <Badge className="bg-yellow-600 text-white rounded-none minecraft-border">{user.rank}</Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-400 minecraft-text mb-2">{user.email}</p>
+                <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                  <Mail className="h-4 w-4" />
+                  <span>{user.email}</span>
+                </div>
                 <div className="flex items-center gap-1 text-sm text-gray-400">
                   <Calendar className="h-4 w-4" />
                   <span>Joined: {new Date().toLocaleDateString()}</span>
@@ -371,6 +324,46 @@ export default function ProfilePage() {
                 {isEditing && (
                   <p className="text-xs text-gray-400 mt-1 minecraft-text">{editData.bio.length}/500 characters</p>
                 )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Account Information Card */}
+        <Card className="bg-gray-800 border-none minecraft-card">
+          <CardHeader>
+            <CardTitle className="minecraft-text flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Account Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="minecraft-text text-sm text-gray-400">Email Address</Label>
+                <div className="bg-gray-700/50 p-3 minecraft-border border-2 border-gray-600 rounded-none">
+                  <p className="minecraft-text">{user.email}</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="minecraft-text text-sm text-gray-400">Account Status</Label>
+                <div className="bg-gray-700/50 p-3 minecraft-border border-2 border-gray-600 rounded-none">
+                  <Badge className="bg-green-600 text-white rounded-none minecraft-border">
+                    {user.emailConfirmed ? "Verified" : "Pending Verification"}
+                  </Badge>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="minecraft-text text-sm text-gray-400">Rank</Label>
+                <div className="bg-gray-700/50 p-3 minecraft-border border-2 border-gray-600 rounded-none">
+                  <Badge className="bg-yellow-600 text-white rounded-none minecraft-border">{user.rank}</Badge>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="minecraft-text text-sm text-gray-400">Member Since</Label>
+                <div className="bg-gray-700/50 p-3 minecraft-border border-2 border-gray-600 rounded-none">
+                  <p className="minecraft-text">{new Date().toLocaleDateString()}</p>
+                </div>
               </div>
             </div>
           </CardContent>
