@@ -7,7 +7,8 @@ import { supabase } from "@/lib/supabase"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 type User = {
-  id: string
+  id: number
+  authId: string
   email: string
   username: string
   bio?: string
@@ -75,20 +76,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
-      const { data: profile, error } = await supabase.from("users").select("*").eq("id", supabaseUser.id).single()
+      const { data: profile, error } = await supabase.from("users").select("*").eq("auth_id", supabaseUser.id).single()
 
       if (error && error.code !== "PGRST116") {
         console.error("Error fetching profile:", error)
         return
       }
 
+      if (!profile) {
+        // Create profile if it doesn't exist
+        const { data: newProfile, error: insertError } = await supabase
+          .from("users")
+          .insert({
+            auth_id: supabaseUser.id,
+            email: supabaseUser.email!,
+            username: supabaseUser.user_metadata?.username || supabaseUser.email!.split("@")[0],
+            bio: "New member of the Private Java SMP!",
+            rank: "Member",
+            email_confirmed: supabaseUser.email_confirmed_at !== null,
+          })
+          .select()
+          .single()
+
+        if (insertError) {
+          console.error("Error creating profile:", insertError)
+          return
+        }
+
+        const userData: User = {
+          id: newProfile.id,
+          authId: supabaseUser.id,
+          email: supabaseUser.email!,
+          username: newProfile.username,
+          bio: newProfile.bio,
+          profilePicture: newProfile.profile_picture_url,
+          rank: newProfile.rank,
+          emailConfirmed: supabaseUser.email_confirmed_at !== null,
+        }
+
+        setUser(userData)
+        return
+      }
+
       const userData: User = {
-        id: supabaseUser.id,
+        id: profile.id,
+        authId: supabaseUser.id,
         email: supabaseUser.email!,
-        username: profile?.username || supabaseUser.email!.split("@")[0],
-        bio: profile?.bio,
-        profilePicture: profile?.profile_picture_url,
-        rank: profile?.rank || "Member",
+        username: profile.username,
+        bio: profile.bio,
+        profilePicture: profile.profile_picture_url,
+        rank: profile.rank,
         emailConfirmed: supabaseUser.email_confirmed_at !== null,
       }
 
@@ -205,19 +242,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        // Insert user profile
-        const { error: profileError } = await supabase.from("users").insert({
-          id: data.user.id,
-          email: email.trim(),
-          username: username.trim(),
-          bio: "New member of the Private Java SMP!",
-          rank: "Member",
-        })
-
-        if (profileError) {
-          console.error("Profile creation error:", profileError)
-        }
-
         toast({
           title: "Registration successful",
           description: "Please check your email to confirm your account before logging in.",
@@ -322,7 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Update user profile in Supabase
+      // Update user profile in database
       const updateData: any = {
         updated_at: new Date().toISOString(),
       }

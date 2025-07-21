@@ -1,65 +1,84 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useCart, type VipProduct } from "@/context/cart-context"
-import { ShoppingCart, Check, Star } from "lucide-react"
+import { ShoppingCart, Check, Star, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import SafeImage from "@/components/safe-image"
-
-const vipProducts: VipProduct[] = [
-  {
-    id: "bronze-vip",
-    name: "Bronze VIP",
-    price: 4,
-    image: "/bronze-vip.jpeg",
-    tier: "bronze",
-  },
-  {
-    id: "silver-vip",
-    name: "Silver VIP",
-    price: 7,
-    image: "/silver-vip.jpeg",
-    tier: "silver",
-  },
-  {
-    id: "gold-vip",
-    name: "Gold VIP",
-    price: 10,
-    image: "/gold-vip.jpeg",
-    tier: "gold",
-  },
-]
-
-const vipBenefits = {
-  bronze: [
-    "Early access to new minigames that will be launched in the future.",
-    "10% discount on items in the server store.",
-    "Access to exclusive kits.",
-    "Prioritization in the entry queues for popular minigames.",
-    "An exclusive Bronze emblem in the chat.",
-  ],
-  silver: [
-    "All VIP Bronze advantages.",
-    "20% discount on items in the server store.",
-    "Access to exclusive kits.",
-    "Access to an exclusive minigame only for Silver members.",
-    "An exclusive Silver emblem in the chat.",
-  ],
-  gold: [
-    "All VIP Silver advantages.",
-    "50% discount on items in the server store.",
-    "Daily rewards for logging in to the server.",
-    "Access to an exclusive voice channel for Gold members.",
-    "An exclusive Gold emblem in the chat.",
-  ],
-}
+import { supabase } from "@/lib/supabase"
 
 export default function ShopPage() {
   const { addToCart } = useCart()
   const [addedToCart, setAddedToCart] = useState<Record<string, boolean>>({})
+  const [vipProducts, setVipProducts] = useState<VipProduct[]>([])
+  const [vipBenefits, setVipBenefits] = useState<Record<string, string[]>>({})
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchVipData()
+  }, [])
+
+  const fetchVipData = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      // Fetch VIP packages
+      const { data: packages, error: packagesError } = await supabase
+        .from("vip_packages")
+        .select("*")
+        .order("price", { ascending: true })
+
+      if (packagesError) {
+        console.error("Error fetching VIP packages:", packagesError)
+        setError("Failed to load VIP packages")
+        return
+      }
+
+      // Fetch VIP benefits
+      const { data: benefits, error: benefitsError } = await supabase
+        .from("vip_benefits")
+        .select("*")
+        .order("id", { ascending: true })
+
+      if (benefitsError) {
+        console.error("Error fetching VIP benefits:", benefitsError)
+        setError("Failed to load VIP benefits")
+        return
+      }
+
+      // Transform packages data
+      const transformedPackages: VipProduct[] = packages.map((pkg) => ({
+        id: pkg.id.toString(),
+        name: pkg.name,
+        price: Number.parseFloat(pkg.price),
+        image: pkg.image_url || "/placeholder.svg",
+        tier: pkg.tier as "bronze" | "silver" | "gold",
+      }))
+
+      // Group benefits by package ID
+      const benefitsMap: Record<string, string[]> = {}
+      benefits.forEach((benefit) => {
+        const packageId = benefit.package_id.toString()
+        if (!benefitsMap[packageId]) {
+          benefitsMap[packageId] = []
+        }
+        benefitsMap[packageId].push(benefit.description)
+      })
+
+      setVipProducts(transformedPackages)
+      setVipBenefits(benefitsMap)
+    } catch (err) {
+      console.error("Error fetching VIP data:", err)
+      setError("Failed to load VIP data")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleAddToCart = (product: VipProduct) => {
     addToCart(product)
@@ -82,6 +101,30 @@ export default function ShopPage() {
       default:
         return "bg-gray-600 hover:bg-gray-700"
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-12 w-12 animate-spin text-green-500 mb-4" />
+          <p className="text-lg minecraft-text">Loading VIP packages...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
+        <div className="bg-red-500/20 border-2 border-red-500 rounded-none p-8 max-w-md mx-auto minecraft-border">
+          <p className="text-red-400 minecraft-text mb-4">{error}</p>
+          <Button onClick={fetchVipData} className="bg-red-600 hover:bg-red-700 minecraft-button rounded-none">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -131,7 +174,7 @@ export default function ShopPage() {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full mb-4 minecraft-button rounded-none">
+                  <Button variant="outline" className="w-full mb-4 minecraft-button rounded-none bg-transparent">
                     View Benefits
                   </Button>
                 </DialogTrigger>
@@ -152,7 +195,7 @@ export default function ShopPage() {
                   </DialogHeader>
                   <div className="mt-4">
                     <ul className="space-y-3">
-                      {vipBenefits[product.tier].map((benefit, index) => (
+                      {(vipBenefits[product.id] || []).map((benefit, index) => (
                         <li key={index} className="flex items-start">
                           <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                           <span className="minecraft-text text-sm">{benefit}</span>

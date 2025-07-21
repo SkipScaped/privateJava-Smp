@@ -36,7 +36,12 @@ export async function GET() {
     }
 
     // If not in cache, fetch from database
-    const { data: serverStatus, error } = await supabase.from("server_status").select("*").single()
+    const { data: serverStatus, error } = await supabase
+      .from("server_status")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single()
 
     if (error) {
       console.error("Error fetching server status:", error)
@@ -60,13 +65,11 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        serverName: serverStatus.server_name,
-        serverIp: serverStatus.server_ip,
-        isOnline: serverStatus.is_online,
-        playerCount: serverStatus.player_count,
-        maxPlayers: serverStatus.max_players,
+        online: serverStatus.is_online,
+        player_count: serverStatus.player_count,
+        max_players: serverStatus.max_players,
         version: serverStatus.version,
-        lastUpdated: serverStatus.updated_at,
+        last_updated: serverStatus.updated_at,
       },
       source: "database",
     })

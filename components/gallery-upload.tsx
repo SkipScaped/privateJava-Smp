@@ -90,9 +90,9 @@ export default function GalleryUpload() {
       // Upload to Blob storage
       const imageUrl = await uploadImage(file, filename)
 
-      // Save to Supabase database
+      // Save to database using the user's database ID
       const { error: dbError } = await supabase.from("gallery").insert({
-        user_id: user.id,
+        user_id: user.id, // Use the database ID, not auth ID
         title,
         description,
         image_url: imageUrl,

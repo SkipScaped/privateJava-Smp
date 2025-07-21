@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase"
 import SafeImage from "@/components/safe-image"
 
 type Player = {
-  id: string
+  id: number
   username: string
   profile_picture_url?: string
   rank: string
