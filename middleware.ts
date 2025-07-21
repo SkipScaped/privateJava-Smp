@@ -1,31 +1,37 @@
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// Define which routes require authentication
-const protectedRoutes = ["/profile", "/gallery/upload"]
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
+  const supabase = createMiddlewareClient({ req, res })
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  // Refresh session if expired - required for Server Components
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  // Check if the route requires authentication
-  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
+  // Protected routes
+  const protectedRoutes = ["/profile", "/gallery/upload"]
+  const isProtectedRoute = protectedRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
 
   if (isProtectedRoute) {
-    // Get the session ID from cookies
-    const sessionId = request.cookies.get("sessionId")?.value
-
-    // If no session ID, redirect to login
-    if (!sessionId) {
-      const url = new URL("/auth/login", request.url)
-      url.searchParams.set("redirect", pathname)
-      return NextResponse.redirect(url)
+    if (!session) {
+      // Redirect to login with return URL
+      const redirectUrl = new URL("/auth/login", req.url)
+      redirectUrl.searchParams.set("redirect", req.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
     }
 
-    // In a real app, you would verify the session with Redis here
-    // For now, we'll just check if the session ID exists
+    // Check if email is confirmed
+    if (!session.user.email_confirmed_at) {
+      const redirectUrl = new URL("/auth/login", req.url)
+      redirectUrl.searchParams.set("redirect", req.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
   }
 
-  return NextResponse.next()
+  return res
 }
 
 export const config = {

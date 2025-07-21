@@ -27,8 +27,7 @@ export default function SignupPage() {
   const { signup, isLoading, user } = useAuth()
 
   useEffect(() => {
-    // Check if user is already logged in
-    if (user) {
+    if (user && user.emailConfirmed) {
       router.push("/profile")
     }
   }, [user, router])
@@ -39,26 +38,27 @@ export default function SignupPage() {
   }
 
   const validateForm = () => {
-    // Username validation
     if (formData.username.length < 3) {
       setError("Username must be at least 3 characters long")
       return false
     }
 
-    // Email validation
+    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      setError("Username can only contain letters, numbers, and underscores")
+      return false
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address")
       return false
     }
 
-    // Password validation
     if (formData.password.length < 6) {
       setError("Password must be at least 6 characters long")
       return false
     }
 
-    // Password confirmation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
       return false
@@ -83,7 +83,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md bg-gray-800 border-none minecraft-card rounded-none">
         <CardHeader className="items-center">
           <div className="w-16 h-16 mb-4 relative rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
@@ -116,6 +116,9 @@ export default function SignupPage() {
                 className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500 rounded-none minecraft-border minecraft-text"
                 disabled={isLoading}
               />
+              <p className="text-xs text-gray-400 mt-1 minecraft-text">
+                Only letters, numbers, and underscores allowed
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -126,7 +129,7 @@ export default function SignupPage() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Your email address"
+                placeholder="your.email@example.com"
                 value={formData.email}
                 onChange={handleChange}
                 required

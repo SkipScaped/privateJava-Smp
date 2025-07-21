@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { supabase } from "@/lib/supabase"
 import { redis } from "@/lib/redis"
 
 // Cache TTL in seconds (5 minutes)
@@ -7,11 +7,13 @@ const CACHE_TTL = 300
 
 // Default server status object
 const defaultStatus = {
-  online: false,
-  player_count: 0,
-  max_players: 0,
+  serverName: "Unknown",
+  serverIp: "Unknown",
+  isOnline: false,
+  playerCount: 0,
+  maxPlayers: 0,
   version: "Unknown",
-  last_updated: new Date().toISOString(),
+  lastUpdated: new Date().toISOString(),
 }
 
 export async function GET() {
@@ -28,30 +30,28 @@ export async function GET() {
     if (cachedStatus) {
       return NextResponse.json({
         success: true,
-        data: cachedStatus,
+        data: JSON.parse(cachedStatus),
         source: "cache",
       })
     }
 
     // If not in cache, fetch from database
-    let result = []
-    try {
-      result = await sql`
-        SELECT * FROM server_status 
-        ORDER BY last_updated DESC 
-        LIMIT 1
-      `
-    } catch (dbError) {
-      console.error("Database error:", dbError)
-      // Continue with default status if database fails
-    }
+    const { data: serverStatus, error } = await supabase.from("server_status").select("*").single()
 
-    // Create a default status if no records exist
-    const serverStatus = result[0] || defaultStatus
+    if (error) {
+      console.error("Error fetching server status:", error)
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Failed to fetch server status",
+        },
+        { status: 500 },
+      )
+    }
 
     // Try to store in Redis cache, but don't fail if Redis is unavailable
     try {
-      await redis.set("server_status", serverStatus, { ex: CACHE_TTL })
+      await redis.set("server_status", JSON.stringify(serverStatus), { ex: CACHE_TTL })
     } catch (redisError) {
       console.error("Redis set error:", redisError)
       // Continue without caching if Redis fails
@@ -59,35 +59,55 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: serverStatus,
+      data: {
+        serverName: serverStatus.server_name,
+        serverIp: serverStatus.server_ip,
+        isOnline: serverStatus.is_online,
+        playerCount: serverStatus.player_count,
+        maxPlayers: serverStatus.max_players,
+        version: serverStatus.version,
+        lastUpdated: serverStatus.updated_at,
+      },
       source: "database",
     })
   } catch (error) {
-    console.error("Error fetching server status:", error)
-
-    // Always return a valid JSON response with default status
-    return NextResponse.json({
-      success: true,
-      data: defaultStatus,
-      source: "default",
-    })
+    console.error("Error in server status API:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal server error",
+      },
+      { status: 500 },
+    )
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { online, player_count, max_players, version } = body
+    const { server_name, server_ip, is_online, player_count, max_players, version } = body
 
     // Update database
     let serverStatus
     try {
-      const result = await sql`
-        INSERT INTO server_status (online, player_count, max_players, version)
-        VALUES (${online}, ${player_count}, ${max_players}, ${version})
-        RETURNING *
-      `
-      serverStatus = result[0]
+      const { data, error } = await supabase
+        .from("server_status")
+        .insert([{ server_name, server_ip, is_online, player_count, max_players, version }])
+        .select()
+        .single()
+
+      if (error) {
+        console.error("Database error:", error)
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Failed to update server status in database",
+          },
+          { status: 500 },
+        )
+      }
+
+      serverStatus = data
     } catch (dbError) {
       console.error("Database error:", dbError)
       return NextResponse.json(
@@ -101,7 +121,7 @@ export async function POST(request: Request) {
 
     // Try to update Redis cache, but don't fail if Redis is unavailable
     try {
-      await redis.set("server_status", serverStatus, { ex: CACHE_TTL })
+      await redis.set("server_status", JSON.stringify(serverStatus), { ex: CACHE_TTL })
     } catch (redisError) {
       console.error("Redis set error:", redisError)
       // Continue without caching if Redis fails

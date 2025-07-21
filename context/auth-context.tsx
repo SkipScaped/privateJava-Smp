@@ -3,22 +3,27 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/lib/supabase"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 type User = {
-  id: number
-  username: string
+  id: string
   email: string
-  rank?: string
+  username: string
+  bio?: string
   profilePicture?: string
+  rank?: string
+  emailConfirmed: boolean
 }
 
 type AuthContextType = {
   user: User | null
   isLoading: boolean
-  login: (username: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<boolean>
   signup: (username: string, email: string, password: string) => Promise<boolean>
   logout: () => void
   refreshUser: () => Promise<void>
+  resendConfirmation: (email: string) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -29,77 +34,109 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const { toast } = useToast()
 
-  // Check for existing session on mount - ONLY localStorage
+  // Check for existing session on mount
   useEffect(() => {
-    const checkSession = () => {
+    const getSession = async () => {
       try {
-        const savedUser = localStorage.getItem("minecraft_smp_user")
-        if (savedUser) {
-          try {
-            const userData = JSON.parse(savedUser)
-            if (userData && userData.username) {
-              setUser(userData)
-            } else {
-              // Invalid user data
-              localStorage.removeItem("minecraft_smp_user")
-            }
-          } catch (e) {
-            // Invalid JSON
-            console.error("Invalid user data in localStorage:", e)
-            localStorage.removeItem("minecraft_smp_user")
-          }
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (session?.user) {
+          await fetchUserProfile(session.user)
         }
       } catch (error) {
-        console.error("Error checking session:", error)
-        // Clear potentially corrupted data
-        try {
-          localStorage.removeItem("minecraft_smp_user")
-        } catch (e) {
-          console.error("Error removing item from localStorage:", e)
-        }
+        console.error("Error getting session:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    // Check immediately and also after a small delay to ensure localStorage is available
-    checkSession()
-    const timer = setTimeout(checkSession, 100)
-    return () => clearTimeout(timer)
+    getSession()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event)
+
+      if (session?.user) {
+        await fetchUserProfile(session.user)
+      } else {
+        setUser(null)
+      }
+
+      setIsLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  // Update the login function to properly handle the login state
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
+    try {
+      const { data: profile, error } = await supabase.from("users").select("*").eq("id", supabaseUser.id).single()
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching profile:", error)
+        return
+      }
+
+      const userData: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email!,
+        username: profile?.username || supabaseUser.email!.split("@")[0],
+        bio: profile?.bio,
+        profilePicture: profile?.profile_picture_url,
+        rank: profile?.rank || "Member",
+        emailConfirmed: supabaseUser.email_confirmed_at !== null,
+      }
+
+      setUser(userData)
+    } catch (error) {
+      console.error("Error in fetchUserProfile:", error)
+    }
+  }
+
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true)
 
-      // Simple validation
-      if (!username.trim() || !password.trim()) {
+      if (!email.trim() || !password.trim()) {
         toast({
           title: "Login failed",
-          description: "Please enter both username and password",
+          description: "Please enter both email and password",
           variant: "destructive",
         })
         return false
       }
 
-      // Create user data - accept ANY username/password for demo purposes
-      const userData = {
-        id: Date.now(),
-        username: username.trim(),
-        email: `${username.trim()}@minecraft-smp.com`,
-        profilePicture: undefined,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      })
+
+      if (error) {
+        console.error("Login error:", error)
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        })
+        return false
       }
 
-      // Save to localStorage - ensure this happens synchronously
-      localStorage.setItem("minecraft_smp_user", JSON.stringify(userData))
-
-      // Update state
-      setUser(userData)
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Email not confirmed",
+          description: "Please check your email and confirm your account before logging in.",
+          variant: "destructive",
+        })
+        return false
+      }
 
       toast({
         title: "Login successful",
-        description: `Welcome back, ${username}!`,
+        description: "Welcome back!",
         variant: "default",
       })
 
@@ -130,11 +167,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created. You can now log in.",
-        variant: "default",
+      // Check if username already exists
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("username")
+        .eq("username", username.trim())
+        .single()
+
+      if (existingUser) {
+        toast({
+          title: "Registration failed",
+          description: "Username already exists. Please choose a different one.",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password.trim(),
+        options: {
+          data: {
+            username: username.trim(),
+          },
+        },
       })
+
+      if (error) {
+        console.error("Signup error:", error)
+        toast({
+          title: "Registration failed",
+          description: error.message,
+          variant: "destructive",
+        })
+        return false
+      }
+
+      if (data.user) {
+        // Insert user profile
+        const { error: profileError } = await supabase.from("users").insert({
+          id: data.user.id,
+          email: email.trim(),
+          username: username.trim(),
+          bio: "New member of the Private Java SMP!",
+          rank: "Member",
+        })
+
+        if (profileError) {
+          console.error("Profile creation error:", profileError)
+        }
+
+        toast({
+          title: "Registration successful",
+          description: "Please check your email to confirm your account before logging in.",
+          variant: "default",
+        })
+      }
+
       return true
     } catch (error) {
       console.error("Signup error:", error)
@@ -149,10 +238,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
     try {
+      await supabase.auth.signOut()
       setUser(null)
-      localStorage.removeItem("minecraft_smp_user")
       router.push("/")
       toast({
         title: "Logged out",
@@ -166,19 +255,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const savedUser = localStorage.getItem("minecraft_smp_user")
-      if (savedUser) {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
+      const {
+        data: { user: supabaseUser },
+      } = await supabase.auth.getUser()
+      if (supabaseUser) {
+        await fetchUserProfile(supabaseUser)
       }
     } catch (error) {
       console.error("Error refreshing user:", error)
-      setUser(null)
+    }
+  }
+
+  const resendConfirmation = async (email: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email,
+      })
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        })
+        return false
+      }
+
+      toast({
+        title: "Confirmation email sent",
+        description: "Please check your email for the confirmation link.",
+        variant: "default",
+      })
+      return true
+    } catch (error) {
+      console.error("Resend confirmation error:", error)
+      return false
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        login,
+        signup,
+        logout,
+        refreshUser,
+        resendConfirmation,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
