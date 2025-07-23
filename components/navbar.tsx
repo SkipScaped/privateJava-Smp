@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, User, LogOut, ShoppingCart } from "lucide-react"
+import { Menu, X, User, LogOut, ShoppingCart, Shield } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { Badge } from "@/components/ui/badge"
 import { useCart } from "@/context/cart-context"
@@ -51,6 +51,16 @@ export default function Navbar() {
               Rules
             </Link>
 
+            {/* Admin Link */}
+            {user?.isAdmin && (
+              <Link href="/admin" className="minecraft-text hover:text-red-400 transition-colors">
+                <div className="flex items-center gap-1">
+                  <Shield className="h-4 w-4" />
+                  Admin
+                </div>
+              </Link>
+            )}
+
             {/* Cart */}
             <Link href="/cart" className="relative">
               <Button variant="outline" size="sm" className="minecraft-button rounded-none bg-transparent">
@@ -70,6 +80,7 @@ export default function Navbar() {
                   <Button variant="outline" size="sm" className="minecraft-button rounded-none bg-transparent">
                     <User className="h-4 w-4 mr-2" />
                     {user.username}
+                    {user.isAdmin && <Shield className="h-3 w-3 ml-1 text-red-400" />}
                   </Button>
                 </Link>
                 <Button
@@ -151,6 +162,18 @@ export default function Navbar() {
                 Rules
               </Link>
 
+              {/* Mobile Admin Link */}
+              {user?.isAdmin && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2 minecraft-text hover:text-red-400 transition-colors px-2 py-1"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Shield className="h-4 w-4" />
+                  Admin Dashboard
+                </Link>
+              )}
+
               {/* Mobile Cart */}
               <Link
                 href="/cart"
@@ -175,7 +198,7 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     <User className="h-4 w-4 mr-2" />
-                    Profile ({user.username})
+                    Profile ({user.username}){user.isAdmin && <Shield className="h-3 w-3 ml-1 text-red-400" />}
                   </Link>
                   <button
                     onClick={handleLogout}

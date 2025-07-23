@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase"
+import { supabase, testSupabaseConnection } from "@/lib/supabase"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 type User = {
@@ -14,6 +14,7 @@ type User = {
   bio?: string
   profilePicture?: string
   rank?: string
+  isAdmin: boolean
   emailConfirmed: boolean
 }
 
@@ -36,10 +37,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const { toast } = useToast()
 
-  // Check for existing session on mount
+  // Test Supabase connection on mount
   useEffect(() => {
-    const getSession = async () => {
+    const initializeAuth = async () => {
       try {
+        // Test connection first
+        const connectionOk = await testSupabaseConnection()
+        if (!connectionOk) {
+          console.error("Supabase connection failed")
+          toast({
+            title: "Connection Error",
+            description: "Unable to connect to the database. Please try again later.",
+            variant: "destructive",
+          })
+        }
+
+        // Get existing session
         const {
           data: { session },
         } = await supabase.auth.getSession()
@@ -48,13 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await fetchUserProfile(session.user)
         }
       } catch (error) {
-        console.error("Error getting session:", error)
+        console.error("Error initializing auth:", error)
+        toast({
+          title: "Initialization Error",
+          description: "Failed to initialize authentication. Please refresh the page.",
+          variant: "destructive",
+        })
       } finally {
         setIsLoading(false)
       }
     }
 
-    getSession()
+    initializeAuth()
 
     // Listen for auth changes
     const {
@@ -72,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [toast])
 
   const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
@@ -85,14 +103,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!profile) {
         // Create profile if it doesn't exist
+        const isAdmin = supabaseUser.email === "skipscape.dev@gmail.com"
         const { data: newProfile, error: insertError } = await supabase
           .from("users")
           .insert({
             auth_id: supabaseUser.id,
             email: supabaseUser.email!,
             username: supabaseUser.user_metadata?.username || supabaseUser.email!.split("@")[0],
-            bio: "New member of the Private Java SMP!",
-            rank: "Member",
+            bio: isAdmin ? "Server Administrator" : "New member of the Private Java SMP!",
+            rank: isAdmin ? "Admin" : "Member",
+            is_admin: isAdmin,
             email_confirmed: supabaseUser.email_confirmed_at !== null,
           })
           .select()
@@ -111,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           bio: newProfile.bio,
           profilePicture: newProfile.profile_picture_url,
           rank: newProfile.rank,
+          isAdmin: newProfile.is_admin,
           emailConfirmed: supabaseUser.email_confirmed_at !== null,
         }
 
@@ -126,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         bio: profile.bio,
         profilePicture: profile.profile_picture_url,
         rank: profile.rank,
+        isAdmin: profile.is_admin || false,
         emailConfirmed: supabaseUser.email_confirmed_at !== null,
       }
 
