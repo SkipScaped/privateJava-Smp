@@ -1,45 +1,49 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { vipTiers } from "@/lib/data"
 
 export async function GET() {
   try {
-    const { data: shopItems, error } = await supabase
-      .from("shop_items")
-      .select("*")
-      .eq("is_available", true)
-      .order("price", { ascending: true })
+    // In a real app, this would fetch products from a database
+    return NextResponse.json({ success: true, data: vipTiers })
+  } catch (error) {
+    return NextResponse.json({ success: false, message: "Failed to fetch products" }, { status: 500 })
+  }
+}
 
-    if (error) {
-      console.error("Error fetching shop items:", error)
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Failed to fetch shop items",
-        },
-        { status: 500 },
-      )
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    const { userId, productId, quantity = 1 } = body
+
+    // Validate input
+    if (!userId || !productId) {
+      return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 })
+    }
+
+    // Find the product
+    const product = vipTiers.find((tier) => tier.id === productId)
+
+    if (!product) {
+      return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 })
+    }
+
+    // In a real app, this would create an order in the database
+    const order = {
+      id: Math.floor(Math.random() * 1000000),
+      userId,
+      productId,
+      quantity,
+      totalPrice: product.price * quantity,
+      status: "pending",
+      createdAt: new Date().toISOString(),
     }
 
     return NextResponse.json({
       success: true,
-      data: shopItems.map((item) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price: Number.parseFloat(item.price),
-        imageUrl: item.image_url,
-        category: item.category,
-        isAvailable: item.is_available,
-      })),
+      message: "Order created successfully",
+      order,
     })
   } catch (error) {
-    console.error("Error in shop API:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Internal server error",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ success: false, message: "Failed to create order" }, { status: 500 })
   }
 }

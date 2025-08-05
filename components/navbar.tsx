@@ -1,227 +1,210 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, User, LogOut, ShoppingCart, Shield } from "lucide-react"
-import { useAuth } from "@/context/auth-context"
-import { Badge } from "@/components/ui/badge"
+import { ShoppingCart, Menu, X, User, LogOut, Home, Package, Book } from "lucide-react"
 import { useCart } from "@/context/cart-context"
+import { useAuth } from "@/context/auth-context"
 import SafeImage from "@/components/safe-image"
+import { Badge } from "@/components/ui/badge"
+import Image from "next/image"
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false)
-  const { user, logout } = useAuth()
-  const { items } = useCart()
+  // Fix the responsive mode in the navbar
 
-  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0)
+  // Update the mobile menu to ensure it works properly
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const { cartItems } = useCart()
+  const { user, logout } = useAuth()
+
+  // Ensure mounted state is properly set
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Add a function to close the menu when clicking a link
+  const closeMenu = () => {
+    setIsMenuOpen(false)
+  }
+
+  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0)
+
+  const navItems = [
+    { name: "Home", href: "/", icon: Home },
+    { name: "Shop", href: "/shop", icon: Package },
+    { name: "Rules", href: "/rules", icon: Book },
+  ]
 
   const handleLogout = () => {
     logout()
-    setIsOpen(false)
+    setIsMenuOpen(false)
   }
 
   return (
-    <nav className="bg-gray-800 border-b-4 border-green-500 minecraft-border sticky top-0 z-50">
+    <nav className="bg-gray-900/90 backdrop-blur-sm py-4 sticky top-0 z-50 border-b-4 border-green-800 minecraft-border">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 relative rounded-none overflow-hidden minecraft-border border-2 border-gray-600">
-              <SafeImage src="/logo.png" alt="Private Java SMP Logo" width={40} height={40} fallbackText="SMP" />
+        <div className="flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-none overflow-hidden minecraft-border border-2 border-gray-700">
+              <Image src="/logo.png" alt="Private Java SMP Logo" width={40} height={40} className="object-contain" />
             </div>
-            <span className="text-xl font-bold minecraft-title hidden sm:block">Private Java SMP</span>
+            <span className="text-lg sm:text-xl font-bold text-white minecraft-text">Private Java SMP</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="minecraft-text hover:text-green-400 transition-colors">
-              Home
-            </Link>
-            <Link href="/players" className="minecraft-text hover:text-green-400 transition-colors">
-              Players
-            </Link>
-            <Link href="/gallery" className="minecraft-text hover:text-green-400 transition-colors">
-              Gallery
-            </Link>
-            <Link href="/shop" className="minecraft-text hover:text-green-400 transition-colors">
-              Shop
-            </Link>
-            <Link href="/rules" className="minecraft-text hover:text-green-400 transition-colors">
-              Rules
-            </Link>
-
-            {/* Admin Link */}
-            {user?.isAdmin && (
-              <Link href="/admin" className="minecraft-text hover:text-red-400 transition-colors">
-                <div className="flex items-center gap-1">
-                  <Shield className="h-4 w-4" />
-                  Admin
-                </div>
+          <div className="hidden md:flex items-center gap-6">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors minecraft-text"
+              >
+                <item.icon className="h-4 w-4" />
+                {item.name}
               </Link>
-            )}
+            ))}
 
-            {/* Cart */}
-            <Link href="/cart" className="relative">
-              <Button variant="outline" size="sm" className="minecraft-button rounded-none bg-transparent">
-                <ShoppingCart className="h-4 w-4" />
-                {cartItemCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    {cartItemCount}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
-
-            {/* Auth Buttons */}
-            {user ? (
-              <div className="flex items-center space-x-3">
-                <Link href="/profile">
-                  <Button variant="outline" size="sm" className="minecraft-button rounded-none bg-transparent">
-                    <User className="h-4 w-4 mr-2" />
-                    {user.username}
-                    {user.isAdmin && <Shield className="h-3 w-3 ml-1 text-red-400" />}
-                  </Button>
-                </Link>
-                <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  size="sm"
-                  className="minecraft-button rounded-none hover:bg-red-600 bg-transparent"
+            {mounted && user ? (
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors minecraft-text"
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
+                  <User className="h-4 w-4" />
+                  Profile
+                </Link>
+
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="minecraft-button bg-red-700 hover:bg-red-800"
+                >
+                  <LogOut className="h-4 w-4 mr-1" />
                   Logout
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <Link href="/auth/login">
-                  <Button variant="outline" size="sm" className="minecraft-button rounded-none bg-transparent">
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/auth/signup">
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700 minecraft-button rounded-none">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsOpen(!isOpen)}
-              className="minecraft-button rounded-none"
-            >
-              {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden py-4 border-t border-gray-700">
-            <div className="flex flex-col space-y-3">
-              <Link
-                href="/"
-                className="minecraft-text hover:text-green-400 transition-colors px-2 py-1"
-                onClick={() => setIsOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                href="/players"
-                className="minecraft-text hover:text-green-400 transition-colors px-2 py-1"
-                onClick={() => setIsOpen(false)}
-              >
-                Players
-              </Link>
-              <Link
-                href="/gallery"
-                className="minecraft-text hover:text-green-400 transition-colors px-2 py-1"
-                onClick={() => setIsOpen(false)}
-              >
-                Gallery
-              </Link>
-              <Link
-                href="/shop"
-                className="minecraft-text hover:text-green-400 transition-colors px-2 py-1"
-                onClick={() => setIsOpen(false)}
-              >
-                Shop
-              </Link>
-              <Link
-                href="/rules"
-                className="minecraft-text hover:text-green-400 transition-colors px-2 py-1"
-                onClick={() => setIsOpen(false)}
-              >
-                Rules
-              </Link>
-
-              {/* Mobile Admin Link */}
-              {user?.isAdmin && (
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-2 minecraft-text hover:text-red-400 transition-colors px-2 py-1"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Shield className="h-4 w-4" />
-                  Admin Dashboard
-                </Link>
-              )}
-
-              {/* Mobile Cart */}
-              <Link
-                href="/cart"
-                className="flex items-center minecraft-text hover:text-green-400 transition-colors px-2 py-1"
-                onClick={() => setIsOpen(false)}
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Cart
-                {cartItemCount > 0 && (
-                  <Badge className="ml-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    {cartItemCount}
-                  </Badge>
-                )}
-              </Link>
-
-              {/* Mobile Auth */}
-              {user ? (
-                <>
-                  <Link
-                    href="/profile"
-                    className="flex items-center minecraft-text hover:text-green-400 transition-colors px-2 py-1"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    Profile ({user.username}){user.isAdmin && <Shield className="h-3 w-3 ml-1 text-red-400" />}
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center minecraft-text hover:text-red-400 transition-colors px-2 py-1 text-left"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <div className="flex flex-col space-y-2 px-2">
-                  <Link href="/auth/login" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" size="sm" className="w-full minecraft-button rounded-none bg-transparent">
+              mounted && (
+                <div className="flex items-center gap-2">
+                  <Link href="/auth/login">
+                    <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white minecraft-button">
                       Login
                     </Button>
                   </Link>
-                  <Link href="/auth/signup" onClick={() => setIsOpen(false)}>
-                    <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 minecraft-button rounded-none">
+                  <Link href="/auth/signup">
+                    <Button size="sm" className="bg-green-700 hover:bg-green-800 minecraft-button">
                       Sign Up
                     </Button>
                   </Link>
                 </div>
+              )
+            )}
+
+            <Link
+              href="/cart"
+              className="relative p-1.5 rounded-none hover:bg-gray-700 minecraft-border border-2 border-gray-700"
+            >
+              <ShoppingCart className="h-5 w-5 text-gray-300" />
+              {totalItems > 0 && (
+                <Badge className="absolute -top-1 -right-1 bg-red-600 text-white text-xs h-5 min-w-5 flex items-center justify-center rounded-none px-1 minecraft-border">
+                  {totalItems}
+                </Badge>
               )}
+            </Link>
+          </div>
+
+          {/* Mobile Navigation Button */}
+          <div className="md:hidden flex items-center">
+            <Link href="/cart" className="relative mr-4 p-1.5 rounded-none minecraft-border border-2 border-gray-700">
+              <ShoppingCart className="h-5 w-5 text-gray-300" />
+              {totalItems > 0 && (
+                <Badge className="absolute -top-1 -right-1 bg-red-600 text-white text-xs h-5 min-w-5 flex items-center justify-center rounded-none px-1 minecraft-border">
+                  {totalItems}
+                </Badge>
+              )}
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-white minecraft-button"
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden fixed top-[72px] left-0 right-0 bg-gray-800 border-b-4 border-green-800 minecraft-border z-40 shadow-lg">
+            <div className="container mx-auto px-4">
+              <div className="py-3">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
+                    onClick={closeMenu}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.name}
+                  </Link>
+                ))}
+
+                <div className="border-t-2 border-gray-700 my-2"></div>
+
+                {mounted && user ? (
+                  <>
+                    <div className="px-4 py-2">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-10 h-10 rounded-none overflow-hidden minecraft-border border-2 border-gray-700">
+                          <SafeImage
+                            src={user.profilePicture}
+                            alt={user.username || "User"}
+                            fill
+                            className="object-cover"
+                            fallbackText={user.username?.substring(0, 2).toUpperCase() || "U"}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-medium minecraft-text">{user.username}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
+                      onClick={closeMenu}
+                    >
+                      <User className="h-5 w-5" />
+                      View Profile
+                    </Link>
+                    <button
+                      className="flex items-center gap-2 w-full text-left py-3 px-4 text-red-400 hover:bg-red-900/20 minecraft-text"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  mounted && (
+                    <div className="flex flex-col gap-2 p-4">
+                      <Link href="/auth/login" className="w-full" onClick={closeMenu}>
+                        <Button variant="outline" className="w-full minecraft-button">
+                          Login
+                        </Button>
+                      </Link>
+                      <Link href="/auth/signup" className="w-full" onClick={closeMenu}>
+                        <Button className="w-full bg-green-700 hover:bg-green-800 minecraft-button">Sign Up</Button>
+                      </Link>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
           </div>
         )}
