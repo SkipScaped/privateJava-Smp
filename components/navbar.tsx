@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Menu, X, User, LogOut, Home, Package, Book } from "lucide-react"
+import { ShoppingCart, Menu, X, LogOut, Home, Package, Book } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useAuth } from "@/context/auth-context"
 import SafeImage from "@/components/safe-image"
@@ -68,14 +68,6 @@ export default function Navbar() {
 
             {mounted && user ? (
               <div className="flex items-center gap-4">
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors minecraft-text"
-                >
-                  <User className="h-4 w-4" />
-                  Profile
-                </Link>
-
                 <Button
                   variant="destructive"
                   size="sm"
@@ -174,14 +166,6 @@ export default function Navbar() {
                         </div>
                       </div>
                     </div>
-                    <Link
-                      href="/profile"
-                      className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
-                      onClick={closeMenu}
-                    >
-                      <User className="h-5 w-5" />
-                      View Profile
-                    </Link>
                     <button
                       className="flex items-center gap-2 w-full text-left py-3 px-4 text-red-400 hover:bg-red-900/20 minecraft-text"
                       onClick={handleLogout}
@@ -194,7 +178,7 @@ export default function Navbar() {
                   mounted && (
                     <div className="flex flex-col gap-2 p-4">
                       <Link href="/auth/login" className="w-full" onClick={closeMenu}>
-                        <Button variant="outline" className="w-full minecraft-button">
+                        <Button variant="outline" className="w-full minecraft-button bg-transparent">
                           Login
                         </Button>
                       </Link>
