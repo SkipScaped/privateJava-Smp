@@ -3,279 +3,282 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Loader2, Calendar, Edit, Save, X, Upload } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/context/auth-context"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
+import { Upload, User, Mail, Calendar, Crown } from "lucide-react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 
 export default function ProfilePage() {
-  const { user, isLoading } = useAuth()
-  const router = useRouter()
+  const { user } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
   const [mounted, setMounted] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
-  const [redirecting, setRedirecting] = useState(false)
-  const [editData, setEditData] = useState({
-    bio: "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server.",
-    profilePicture: "",
-  })
-  const [savedData, setSavedData] = useState({
-    bio: "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server.",
-    profilePicture: "",
-  })
+  const [profilePicture, setProfilePicture] = useState("")
+  const [description, setDescription] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-  }, [])
-
-  // Only redirect after we're mounted, not loading, and confirmed no user
-  useEffect(() => {
-    if (mounted && !isLoading && !user) {
-      console.log("No user found after loading complete, redirecting to login")
-      setRedirecting(true)
-      // Add a small delay to prevent immediate redirect
-      const timer = setTimeout(() => {
-        router.push("/auth/login?redirect=/profile")
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [mounted, isLoading, user, router])
-
-  useEffect(() => {
-    if (user && mounted) {
-      // Try to load saved profile data from localStorage first
-      const savedProfileKey = `profile_${user.username}`
-      const savedProfileData = localStorage.getItem(savedProfileKey)
-
-      if (savedProfileData) {
-        // Use saved data if it exists
-        try {
-          const parsedData = JSON.parse(savedProfileData)
-          setEditData(parsedData)
-          setSavedData(parsedData)
-        } catch (error) {
-          console.error("Error parsing saved profile data:", error)
-          // Use default data if parsing fails
-          const initialData = {
-            bio: "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server.",
-            profilePicture: user.profilePicture || "",
-          }
-          setEditData(initialData)
-          setSavedData(initialData)
-        }
-      } else {
-        // Only set initial demo data if no saved data exists
-        const initialBio =
-          "I love building redstone contraptions and exploring new biomes! Welcome to our Private Java SMP server."
-        const initialProfilePicture = user.profilePicture || ""
-
-        const initialData = {
-          bio: initialBio,
-          profilePicture: initialProfilePicture,
-        }
-
-        setEditData(initialData)
-        setSavedData(initialData)
-      }
-    }
-  }, [user, mounted])
-
-  const handleSave = () => {
-    // Save the edited data to state
-    setSavedData({
-      bio: editData.bio,
-      profilePicture: editData.profilePicture,
-    })
-
-    // Persist to localStorage with user-specific key
-    if (user) {
-      const savedProfileKey = `profile_${user.username}`
-      try {
-        localStorage.setItem(
-          savedProfileKey,
-          JSON.stringify({
-            bio: editData.bio,
-            profilePicture: editData.profilePicture,
-          }),
-        )
-      } catch (error) {
-        console.error("Error saving profile data:", error)
-      }
+    if (!user) {
+      router.push("/auth/login")
+      return
     }
 
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated!",
-      variant: "default",
-    })
+    // Load profile data from localStorage
+    const savedProfilePicture = localStorage.getItem(`profile_picture_${user.username}`)
+    const savedDescription = localStorage.getItem(`profile_description_${user.username}`)
 
-    setIsEditing(false)
-  }
+    if (savedProfilePicture) {
+      setProfilePicture(savedProfilePicture)
+    }
+    if (savedDescription) {
+      setDescription(savedDescription)
+    }
+  }, [user, router])
 
-  const handleCancel = () => {
-    // Reset to the saved data
-    setEditData({
-      bio: savedData.bio,
-      profilePicture: savedData.profilePicture,
-    })
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !user) return
 
-    setIsEditing(false)
-  }
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      })
+      return
+    }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setEditData({ ...editData, profilePicture: reader.result as string })
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Upload failed")
       }
-      reader.readAsDataURL(file)
+
+      const data = await response.json()
+      const imageUrl = data.url
+
+      setProfilePicture(imageUrl)
+      localStorage.setItem(`profile_picture_${user.username}`, imageUrl)
+
+      toast({
+        title: "Profile picture updated!",
+        description: "Your profile picture has been successfully uploaded.",
+      })
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload profile picture. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setUploading(false)
     }
   }
 
-  // Show loading while checking authentication or not mounted
-  if (!mounted || isLoading) {
+  const handleDescriptionSave = () => {
+    if (!user) return
+
+    setSaving(true)
+
+    try {
+      localStorage.setItem(`profile_description_${user.username}`, description)
+
+      toast({
+        title: "Description saved!",
+        description: "Your profile description has been updated.",
+      })
+    } catch (error) {
+      toast({
+        title: "Save failed",
+        description: "Failed to save description. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!mounted || !user) {
     return (
-      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-12 w-12 animate-spin text-green-500 mb-4" />
-          <p className="text-lg minecraft-text">Loading profile...</p>
-        </div>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white minecraft-text">Loading...</div>
       </div>
     )
-  }
-
-  // Show redirecting message if we're redirecting
-  if (redirecting || (!user && mounted && !isLoading)) {
-    return (
-      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[60vh]">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-12 w-12 animate-spin text-green-500 mb-4" />
-          <p className="text-lg minecraft-text">Redirecting to login...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Don't render the profile content if no user
-  if (!user) {
-    return null
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold text-center mb-12 minecraft-title">Your Profile</h1>
+    <div className="min-h-screen bg-gray-900 text-white py-8">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold minecraft-title mb-2">Player Profile</h1>
+          <p className="text-gray-400 minecraft-text">Manage your profile information and settings</p>
+        </div>
 
-      <div className="max-w-4xl mx-auto">
-        <Card className="bg-gray-800 border-none minecraft-card">
-          <CardHeader>
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="relative">
-                <div className="relative w-32 h-32 rounded-none overflow-hidden minecraft-border border-4 border-gray-700">
-                  {isEditing && editData.profilePicture ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Profile Picture Card */}
+          <Card className="bg-gray-800 border-gray-700 minecraft-card rounded-none">
+            <CardHeader>
+              <CardTitle className="minecraft-text text-white flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Profile Picture
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col items-center">
+                <div className="w-32 h-32 relative rounded-none overflow-hidden minecraft-border border-4 border-gray-600 bg-gray-700">
+                  {profilePicture ? (
                     <Image
-                      src={editData.profilePicture || "/placeholder.svg"}
-                      alt="Profile Picture"
-                      fill
-                      className="object-cover"
-                    />
-                  ) : savedData.profilePicture ? (
-                    <Image
-                      src={savedData.profilePicture || "/placeholder.svg"}
+                      src={profilePicture || "/placeholder.svg"}
                       alt="Profile Picture"
                       fill
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-700 text-white font-bold">
-                      {user.username?.substring(0, 2).toUpperCase() || "U"}
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <User className="h-12 w-12" />
                     </div>
                   )}
                 </div>
-                {isEditing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-none">
-                    <label htmlFor="profile-upload" className="cursor-pointer">
-                      <Upload className="h-8 w-8 text-white" />
-                      <input
-                        id="profile-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                )}
-              </div>
 
-              <div className="text-center md:text-left flex-1">
-                <div className="flex flex-col md:flex-row items-center gap-2 mb-1">
-                  <CardTitle className="text-2xl minecraft-text">{user.username}</CardTitle>
-                  {user.rank && (
-                    <Badge className="bg-yellow-600 text-white rounded-none minecraft-border">{user.rank}</Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 text-sm text-gray-400 mt-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>Joined: {new Date().toLocaleDateString()}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                {!isEditing ? (
-                  <Button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-blue-700 hover:bg-blue-800 minecraft-button rounded-none"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      onClick={handleSave}
-                      className="bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      Save
-                    </Button>
-                    <Button onClick={handleCancel} variant="outline" className="minecraft-button rounded-none">
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-lg font-medium mb-2 minecraft-text">About Me</Label>
-                {isEditing ? (
-                  <Textarea
-                    value={editData.bio}
-                    onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
-                    className="bg-gray-700 border-gray-600 focus:border-green-500 focus:ring-green-500 rounded-none minecraft-border minecraft-text"
-                    rows={4}
-                    placeholder="Tell us about yourself..."
+                <div className="mt-4 w-full">
+                  <Label htmlFor="profile-picture" className="minecraft-text text-white">
+                    Upload New Picture
+                  </Label>
+                  <Input
+                    id="profile-picture"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    className="mt-2 bg-gray-700 border-gray-600 text-white minecraft-border rounded-none"
                   />
-                ) : (
-                  <p className="text-gray-300 bg-gray-700/50 p-4 minecraft-border border-2 border-gray-600 minecraft-text">
-                    {savedData.bio}
-                  </p>
+                  <p className="text-xs text-gray-400 mt-1 minecraft-text">Max size: 5MB. Supported: JPG, PNG, GIF</p>
+                </div>
+
+                {uploading && (
+                  <Button disabled className="mt-4 w-full minecraft-button rounded-none">
+                    <Upload className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
+                  </Button>
                 )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* User Info Card */}
+          <Card className="bg-gray-800 border-gray-700 minecraft-card rounded-none lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="minecraft-text text-white flex items-center gap-2">
+                <User className="h-5 w-5" />
+                User Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="minecraft-text text-white flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Username
+                  </Label>
+                  <Input
+                    value={user.username || ""}
+                    disabled
+                    className="mt-2 bg-gray-700 border-gray-600 text-white minecraft-border rounded-none"
+                  />
+                </div>
+
+                <div>
+                  <Label className="minecraft-text text-white flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Label>
+                  <Input
+                    value={user.email || ""}
+                    disabled
+                    className="mt-2 bg-gray-700 border-gray-600 text-white minecraft-border rounded-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="minecraft-text text-white flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Member Since
+                  </Label>
+                  <Input
+                    value={user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Unknown"}
+                    disabled
+                    className="mt-2 bg-gray-700 border-gray-600 text-white minecraft-border rounded-none"
+                  />
+                </div>
+
+                <div>
+                  <Label className="minecraft-text text-white flex items-center gap-2">
+                    <Crown className="h-4 w-4" />
+                    VIP Status
+                  </Label>
+                  <Input
+                    value={user.vipRank || "None"}
+                    disabled
+                    className="mt-2 bg-gray-700 border-gray-600 text-white minecraft-border rounded-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="description" className="minecraft-text text-white">
+                  Profile Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Tell other players about yourself..."
+                  maxLength={500}
+                  className="mt-2 bg-gray-700 border-gray-600 text-white minecraft-border rounded-none min-h-[100px]"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-xs text-gray-400 minecraft-text">{description.length}/500 characters</p>
+                  <Button
+                    onClick={handleDescriptionSave}
+                    disabled={saving}
+                    className="bg-green-700 hover:bg-green-800 minecraft-button rounded-none"
+                  >
+                    {saving ? "Saving..." : "Save Description"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

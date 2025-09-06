@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, Menu, X, LogOut, Home, Package, Book } from "lucide-react"
+import { ShoppingCart, Menu, X, LogOut, Home, Package, Book, MessageCircle } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useAuth } from "@/context/auth-context"
 import SafeImage from "@/components/safe-image"
@@ -11,30 +11,26 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 
 export default function Navbar() {
-  // Fix the responsive mode in the navbar
-
-  // Update the mobile menu to ensure it works properly
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { cartItems } = useCart()
   const { user, logout } = useAuth()
 
-  // Ensure mounted state is properly set
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Add a function to close the menu when clicking a link
   const closeMenu = () => {
     setIsMenuOpen(false)
   }
 
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0)
+  const totalItems = mounted && cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0
 
   const navItems = [
     { name: "Home", href: "/", icon: Home },
     { name: "Shop", href: "/shop", icon: Package },
     { name: "Rules", href: "/rules", icon: Book },
+    { name: "Discord", href: "https://discord.gg/B9zaR8aquH", icon: MessageCircle, external: true },
   ]
 
   const handleLogout = () => {
@@ -55,19 +51,28 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors minecraft-text"
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) =>
+              item.external ? (
+                null
+              ) : (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors minecraft-text"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.name}
+                </Link>
+              ),
+            )}
 
             {mounted && user ? (
               <div className="flex items-center gap-4">
+                <Link href="/profile">
+                  <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white minecraft-button">
+                    Profile
+                  </Button>
+                </Link>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -134,17 +139,31 @@ export default function Navbar() {
           <div className="md:hidden fixed top-[72px] left-0 right-0 bg-gray-800 border-b-4 border-green-800 minecraft-border z-40 shadow-lg">
             <div className="container mx-auto px-4">
               <div className="py-3">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
-                    onClick={closeMenu}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {item.name}
-                  </Link>
-                ))}
+                {navItems.map((item) =>
+                  item.external ? (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
+                      onClick={closeMenu}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.name}
+                    </a>
+                  ) : (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
+                      onClick={closeMenu}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.name}
+                    </Link>
+                  ),
+                )}
 
                 <div className="border-t-2 border-gray-700 my-2"></div>
 
@@ -166,6 +185,13 @@ export default function Navbar() {
                         </div>
                       </div>
                     </div>
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-2 py-3 px-4 text-gray-300 hover:bg-gray-700 minecraft-text"
+                      onClick={closeMenu}
+                    >
+                      Profile
+                    </Link>
                     <button
                       className="flex items-center gap-2 w-full text-left py-3 px-4 text-red-400 hover:bg-red-900/20 minecraft-text"
                       onClick={handleLogout}

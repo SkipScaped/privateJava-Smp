@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Users, Server, Gift, Copy, Check, ShoppingCart } from "lucide-react"
+import { Users, Server, Gift, Copy, Check, ShoppingCart, MessageCircle } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { useCart } from "@/context/cart-context"
 import { useEffect, useState } from "react"
@@ -23,7 +23,6 @@ export default function Home() {
     setMounted(true)
   }, [])
 
-  // Update the copyToClipboard function to check if user is logged in
   const copyToClipboard = async () => {
     if (!user) {
       toast({
@@ -61,7 +60,6 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/40 z-10"></div>
         </div>
 
-        {/* Update the hero section to ensure proper responsive layout */}
         <div className="container mx-auto px-4 absolute inset-0 z-20 flex flex-col items-center justify-center text-center">
           {/* Logo */}
           <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 mb-4 sm:mb-6 relative minecraft-border border-8 border-gray-600 bg-gray-800/80 p-3 sm:p-4 rounded-none">
@@ -86,7 +84,7 @@ export default function Home() {
             friends in our growing community!
           </p>
 
-          {/* Server IP Section - Make it more responsive */}
+          {/* Server IP Section */}
           <div className="bg-gray-800/90 p-3 sm:p-4 md:p-6 rounded-none mb-4 sm:mb-6 minecraft-card border-4 border-gray-700 w-full max-w-md mx-2">
             <h3 className="text-lg font-bold mb-2 minecraft-text">Server IP</h3>
             <div className="flex items-center gap-2 bg-gray-700 p-2 sm:p-3 rounded-none minecraft-border border-2 border-gray-600">
@@ -126,7 +124,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Make buttons more responsive */}
+          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md px-2">
             <Link href="/shop" className="w-full">
               <Button size="lg" className="w-full bg-green-700 hover:bg-green-800 minecraft-button rounded-none">
@@ -138,28 +136,29 @@ export default function Home() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full border-white/20 hover:bg-white/10 minecraft-button rounded-none"
+                  className="w-full border-white/20 hover:bg-white/10 minecraft-button rounded-none bg-transparent"
                 >
                   Sign Up Now
                 </Button>
               </Link>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
-                <Link href="/profile" className="w-full">
+                <a href="https://discord.gg/B9zaR8aquH" target="_blank" rel="noopener noreferrer" className="w-full">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full border-white/20 hover:bg-white/10 minecraft-button rounded-none"
+                    className="w-full border-blue-500 text-blue-400 hover:bg-blue-500/10 minecraft-button rounded-none bg-transparent"
                   >
-                    View Profile
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Join Discord
                   </Button>
-                </Link>
+                </a>
                 {mounted && cartCount > 0 && (
                   <Link href="/cart" className="w-full">
                     <Button
                       size="lg"
                       variant="outline"
-                      className="w-full border-orange-500 text-orange-400 hover:bg-orange-500/10 minecraft-button rounded-none relative"
+                      className="w-full border-orange-500 text-orange-400 hover:bg-orange-500/10 minecraft-button rounded-none bg-transparent"
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
                       Cart ({cartCount})
@@ -215,6 +214,33 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Discord CTA Section */}
+      <div className="bg-gradient-to-r from-blue-900 to-purple-900 py-12 sm:py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 minecraft-title">Join Our Discord!</h2>
+          <p className="text-lg sm:text-xl text-gray-200 mb-6 sm:mb-8 max-w-2xl mx-auto minecraft-text">
+            Connect with other players, get updates, and participate in community events. We have 5 members and growing!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="https://discord.gg/B9zaR8aquH" target="_blank" rel="noopener noreferrer">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 minecraft-button rounded-none">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Join Discord Server
+              </Button>
+            </a>
+            <Link href="/shop">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white hover:bg-white/10 minecraft-button rounded-none bg-transparent"
+              >
+                View VIP Shop
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* CTA Section */}
       <div className="bg-gradient-to-r from-green-900 to-blue-900 py-12 sm:py-16">
         <div className="container mx-auto px-4 text-center">
@@ -236,7 +262,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white hover:bg-white/10 minecraft-button rounded-none"
+                    className="border-white hover:bg-white/10 minecraft-button rounded-none bg-transparent"
                   >
                     View Shop
                   </Button>
@@ -253,7 +279,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white hover:bg-white/10 minecraft-button rounded-none"
+                    className="border-white hover:bg-white/10 minecraft-button rounded-none bg-transparent"
                   >
                     View Rules
                   </Button>
