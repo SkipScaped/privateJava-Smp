@@ -69,9 +69,7 @@ export default function Navbar() {
             {mounted && user ? (
               <div className="flex items-center gap-4">
                 <Link href="/profile">
-                  <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white minecraft-button">
-                    Profile
-                  </Button>
+                  
                 </Link>
                 <Button
                   variant="destructive"
