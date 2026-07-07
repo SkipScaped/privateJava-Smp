@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 
 // Discord invite link
-const DISCORD_INVITE_URL = "https://discord.gg/fvmA4jph"
+const DISCORD_INVITE_URL = "https://discord.gg/bqktdUmezj"
 // Default logo image
 const DEFAULT_LOGO = "/logo.png"
 

@@ -16,7 +16,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false)
   const { toast } = useToast()
 
-  const serverIP = "private-java-smp.aternos.me:42323"
+  const serverIP = "private-java-smp.aternos.me:46436"
   const cartCount = getCartCount()
 
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function Home() {
               </Link>
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
-                <a href="https://discord.gg/B9zaR8aquH" target="_blank" rel="noopener noreferrer" className="w-full">
+                <a href="https://discord.gg/bqktdUmezj" target="_blank" rel="noopener noreferrer" className="w-full">
                   <Button
                     size="lg"
                     variant="outline"
@@ -222,7 +222,7 @@ export default function Home() {
             Connect with other players, get updates, and participate in community events. We have 5 members and growing!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="https://discord.gg/B9zaR8aquH" target="_blank" rel="noopener noreferrer">
+            <a href="https://discord.gg/bqktdUmezj" target="_blank" rel="noopener noreferrer">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700 minecraft-button rounded-none">
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Join Discord Server
