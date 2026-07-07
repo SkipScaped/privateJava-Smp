@@ -20,11 +20,39 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 401 })
+      console.error('Auth error:', error)
+      return NextResponse.json({ error: error.message || 'Invalid credentials' }, { status: 401 })
+    }
+
+    if (!data.user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Get user profile
+    let profileData = null
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single()
+      profileData = profile
+    } catch (profileError) {
+      console.error('Profile fetch error:', profileError)
     }
 
     return NextResponse.json(
-      { message: 'Signed in successfully', user: data.user, session: data.session },
+      {
+        message: 'Signed in successfully',
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          username: profileData?.username || data.user.email?.split('@')[0] || 'user',
+          rank: profileData?.rank || 'member',
+          avatar_url: profileData?.avatar_url,
+        },
+        session: data.session,
+      },
       { status: 200 }
     )
   } catch (error) {

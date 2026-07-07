@@ -15,7 +15,7 @@ import SafeImage from "@/components/safe-image"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   })
   const [showPassword, setShowPassword] = useState(false)
@@ -65,12 +65,12 @@ export default function LoginPage() {
     setError(null)
     setSuccess(null)
 
-    if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Please enter both username and password")
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError("Please enter both email and password")
       return
     }
 
-    const loginSuccess = await login(formData.username, formData.password)
+    const loginSuccess = await login(formData.email, formData.password)
 
     if (loginSuccess) {
       // Get redirect path and navigate
@@ -131,14 +131,15 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-white minecraft-text">
-                Username
+              <Label htmlFor="email" className="text-white minecraft-text">
+                Email
               </Label>
               <Input
-                id="username"
-                name="username"
-                placeholder="Your Minecraft username"
-                value={formData.username}
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Your email address"
+                value={formData.email}
                 onChange={handleChange}
                 required
                 className="bg-gray-700 border-gray-600 text-white focus:border-green-500 focus:ring-green-500 rounded-none minecraft-border minecraft-text"
