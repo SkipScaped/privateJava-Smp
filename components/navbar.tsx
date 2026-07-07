@@ -30,7 +30,7 @@ export default function Navbar() {
     { name: "Home", href: "/", icon: Home },
     { name: "Shop", href: "/shop", icon: Package },
     { name: "Rules", href: "/rules", icon: Book },
-    { name: "Discord", href: "https://discord.gg/B9zaR8aquH", icon: MessageCircle, external: true },
+    { name: "Discord", href: "https://discord.gg/bqktdUmezj", icon: MessageCircle, external: true },
   ]
 
   const handleLogout = () => {

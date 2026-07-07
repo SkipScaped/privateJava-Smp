@@ -5,17 +5,17 @@ import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 
 type User = {
-  id: number
+  id: string
   username: string
   email: string
   rank?: string
-  profilePicture?: string
+  avatar_url?: string
 }
 
 type AuthContextType = {
   user: User | null
   isLoading: boolean
-  login: (username: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<boolean>
   signup: (username: string, email: string, password: string) => Promise<boolean>
   logout: () => void
   refreshUser: () => Promise<void>
@@ -29,78 +29,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const { toast } = useToast()
 
-  // Check for existing session on mount - ONLY localStorage
   useEffect(() => {
     const checkSession = () => {
       try {
         const savedUser = localStorage.getItem("minecraft_smp_user")
         if (savedUser) {
-          try {
-            const userData = JSON.parse(savedUser)
-            if (userData && userData.username) {
-              setUser(userData)
-            } else {
-              // Invalid user data
-              localStorage.removeItem("minecraft_smp_user")
-            }
-          } catch (e) {
-            // Invalid JSON
-            console.error("Invalid user data in localStorage:", e)
+          const userData = JSON.parse(savedUser)
+          if (userData && userData.id) {
+            setUser(userData)
+          } else {
             localStorage.removeItem("minecraft_smp_user")
           }
         }
       } catch (error) {
         console.error("Error checking session:", error)
-        // Clear potentially corrupted data
-        try {
-          localStorage.removeItem("minecraft_smp_user")
-        } catch (e) {
-          console.error("Error removing item from localStorage:", e)
-        }
+        localStorage.removeItem("minecraft_smp_user")
       } finally {
         setIsLoading(false)
       }
     }
 
-    // Check immediately and also after a small delay to ensure localStorage is available
     checkSession()
-    const timer = setTimeout(checkSession, 100)
-    return () => clearTimeout(timer)
   }, [])
 
-  // Update the login function to properly handle the login state
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true)
 
-      // Simple validation
-      if (!username.trim() || !password.trim()) {
+      if (!email.trim() || !password.trim()) {
         toast({
           title: "Login failed",
-          description: "Please enter both username and password",
+          description: "Please enter both email and password",
           variant: "destructive",
         })
         return false
       }
 
-      // Create user data - accept ANY username/password for demo purposes
-      const userData = {
-        id: Date.now(),
-        username: username.trim(),
-        email: `${username.trim()}@minecraft-smp.com`,
-        profilePicture: undefined,
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast({
+          title: "Login failed",
+          description: data.error || "Invalid email or password",
+          variant: "destructive",
+        })
+        return false
       }
 
-      // Save to localStorage - ensure this happens synchronously
-      localStorage.setItem("minecraft_smp_user", JSON.stringify(userData))
+      const userData = {
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        rank: data.user.rank,
+        avatar_url: data.user.avatar_url,
+      }
 
-      // Update state
+      localStorage.setItem("minecraft_smp_user", JSON.stringify(userData))
       setUser(userData)
 
       toast({
         title: "Login successful",
-        description: `Welcome back, ${username}!`,
-        variant: "default",
+        description: `Welcome back, ${data.user.username}!`,
       })
 
       return true
@@ -108,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Login error:", error)
       toast({
         title: "Login error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An unexpected error occurred",
         variant: "destructive",
       })
       return false
@@ -130,17 +125,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast({
+          title: "Registration failed",
+          description: data.error || "An error occurred",
+          variant: "destructive",
+        })
+        return false
+      }
+
       toast({
         title: "Registration successful",
         description: "Your account has been created. You can now log in.",
-        variant: "default",
       })
       return true
     } catch (error) {
       console.error("Signup error:", error)
       toast({
         title: "Registration error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An unexpected error occurred",
         variant: "destructive",
       })
       return false
@@ -157,7 +168,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
-        variant: "default",
       })
     } catch (error) {
       console.error("Logout error:", error)
